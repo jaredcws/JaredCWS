@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Command Center</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Operations</p>
+          <h1>Command Center</h1>
+        </div>
+
+        <nav class="nav-links" aria-label="Primary navigation">
+          <button type="button" class="active" data-view="dashboard">Dashboard</button>
+          <button type="button" data-view="business-development">Business Development Calendar</button>
+          <button type="button">Teams</button>
+          <button type="button">Timeline</button>
+          <button type="button">Reports</button>
+          <button type="button">Settings</button>
+        </nav>
+
+        <section class="sidebar-summary">
+          <h2>Workbook Source</h2>
+          <label class="file-input">
+            <span>Load Excel file (.xlsx)</span>
+            <input id="workbook-input" type="file" accept=".xlsx,.xls" />
+          </label>
+          <p class="hint" id="workbook-status">Using seeded sample data. Upload your workbook to flood all sheets.</p>
+        </section>
+
+        <section class="sidebar-summary" id="portfolio-health">
+          <h2>Portfolio Health</h2>
+          <p><strong>18</strong> projects monitored</p>
+          <p><strong>4</strong> at-risk milestones</p>
+        </section>
+
+        <section class="sidebar-summary" id="bd-event-panel" hidden>
+          <h2>Add New BD Event</h2>
+          <div class="mini-form">
+            <input id="new-task" placeholder="Task" />
+            <input id="new-client" placeholder="Client" />
+            <div class="date-row">
+              <select id="new-month"></select>
+              <select id="new-day"></select>
+              <input id="new-year" type="number" min="2020" max="2100" />
+            </div>
+            <select id="new-status"></select>
+            <button id="save-event" type="button">Add Event</button>
+          </div>
+          <p class="hint" id="draft-date">Draft date: --</p>
+        </section>
+
+        <section class="sidebar-summary" id="sheet-list-panel" hidden>
+          <h2>Workbook Sheets</h2>
+          <div id="sheet-list"></div>
+        </section>
+      </aside>
+
+      <main class="main-window">
+        <section id="dashboard-view">
+          <header class="main-header">
+            <div>
+              <p class="eyebrow">Project Management</p>
+              <h2>Program Feed</h2>
+            </div>
+            <button type="button">+ New Project</button>
+          </header>
+
+          <section class="feed-grid" aria-label="Project feed">
+            <article class="feed-column"><header><h3>Backlogged</h3><span>4</span></header><ul><li><h4>Client Portal Revamp</h4><p>Awaiting scope sign-off and design assets.</p></li><li><h4>Warehouse Automation</h4><p>Pending budget approval for Q3 procurement.</p></li><li><h4>Knowledge Base Migration</h4><p>Dependency mapping in progress.</p></li></ul></article>
+            <article class="feed-column"><header><h3>Ongoing</h3><span>7</span></header><ul><li><h4>Mobile App Modernization</h4><p>Sprint 5 is focused on API integration testing.</p></li><li><h4>Global Payroll Rollout</h4><p>Regional compliance checks at 82% completion.</p></li><li><h4>Security Operations Upgrade</h4><p>Zero-trust policies deployed to staging.</p></li></ul></article>
+            <article class="feed-column"><header><h3>Completed</h3><span>7</span></header><ul><li><h4>CRM Data Cleanup</h4><p>De-duplication and governance controls finalized.</p></li><li><h4>Incident Response Training</h4><p>All teams certified with tabletop exercises.</p></li><li><h4>Cost Optimization Initiative</h4><p>Cloud spend reduced by 18% quarter-over-quarter.</p></li></ul></article>
+          </section>
+        </section>
+
+        <section id="bd-view" hidden>
+          <header class="main-header">
+            <div><p class="eyebrow">Business Development</p><h2>BD Calendar</h2></div>
+            <div class="button-row">
+              <label>Month <select id="calendar-month"></select></label>
+              <label>Year <input id="calendar-year" type="number" min="2020" max="2100" /></label>
+            </div>
+          </header>
+
+          <section class="bd-controls">
+            <label>Status<select id="status-filter"></select></label>
+            <label>Owner<select id="owner-filter"></select></label>
+            <label>Category<select id="category-filter"></select></label>
+            <label>Search<input type="text" id="search-filter" placeholder="Task, account, project..." /></label>
+          </section>
+
+          <section class="bd-layout">
+            <article class="feed-column"><header><h3>Scheduled Dates</h3><span id="visible-count">0</span></header><div id="scheduled-days"></div><hr /><div id="bd-calendar-list"></div></article>
+            <article class="feed-column"><header><h3>Modify Selected Effort</h3><span id="selected-id">None</span></header><div id="selected-effort"></div></article>
+          </section>
+        </section>
+
+        <section id="sheet-view" hidden>
+          <header class="main-header"><div><p class="eyebrow">Workbook Data</p><h2 id="sheet-title">Sheet</h2></div></header>
+          <article class="feed-column"><div id="sheet-table"></div></article>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
