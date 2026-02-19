@@ -268,6 +268,8 @@ def search_candidates(role_id: str, min_score: float | None, status: str | None,
             {
                 "candidate_id": row["id"],
                 "full_name": row["full_name"],
+                "current_company": row["current_company"],
+                "headline": row["headline"],
                 "overall_score": scored["overall_score"],
                 "status": row["status"],
                 "top_reasons": ["Strong backend fit", "Location policy match"],
