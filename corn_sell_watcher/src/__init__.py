@@ -1,0 +1,1 @@
+"""Corn sell watcher package."""

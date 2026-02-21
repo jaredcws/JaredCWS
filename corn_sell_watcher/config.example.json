@@ -1,0 +1,35 @@
+{
+  "location": "Whittemore, IA",
+  "agricharts_loc": 202,
+  "source_url": "https://www.newcoop.com/cash-bids/?agricharts_loc=202",
+  "timezone": "America/Chicago",
+  "polling": {
+    "interval": "hourly",
+    "daily_time": "09:05"
+  },
+  "alerts": {
+    "email_enabled": false,
+    "sms_enabled": false,
+    "confidence_level": 50,
+    "best_time_threshold": 0.4,
+    "cooldown_delta": 0.02
+  },
+  "twilio": {
+    "account_sid": "",
+    "auth_token": "",
+    "from": "",
+    "to": ""
+  },
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "",
+    "password": "",
+    "email_from": "",
+    "email_to": ""
+  },
+  "weather": {
+    "lat": 43.0632,
+    "lon": -94.4214
+  }
+}
