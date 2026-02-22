@@ -1,71 +1,53 @@
-# Candidate Sourcing MVP Service
+# SVOV Academy (Spec • Orchestrate • Verify)
 
-This repository includes:
-- A runnable FastAPI backend MVP implementing the planned endpoints.
-- A Windows-friendly desktop UI (`desktop_app.py`) so non-technical users can use the app without Swagger.
+Mobile-first PWA learning platform built with **Next.js + TypeScript + Supabase**.
 
-## Backend API Endpoints
+## Features
 
-- `POST /roles`
-- `GET /candidates/search`
-- `GET /scores/{candidate_id}`
-- `GET /candidates/{candidate_id}/report`
-- `POST /outreach`
+- Email magic-link auth via Supabase
+- Modules → Lessons → Steps navigation
+- Markdown lesson viewer (DB-backed with local dev fallback)
+- Step progress tracking with completion %
+- Quiz engine (multiple-choice, scoring, explanations)
+- Vocabulary terms with spaced repetition review queue
+- Benchmarks (baseline + monthly retest history chart)
+- Admin screen restricted to a configured admin email
 
-## Run Backend Locally
+## Stack
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn src.app:app --reload
-```
+- Next.js 14 (App Router)
+- TypeScript
+- Supabase (Auth + Postgres)
 
-Backend URL: `http://127.0.0.1:8000`
-
-## Run Desktop App
-
-The desktop app can call an already-running backend at `http://127.0.0.1:8000`, or you can click **Start API in Background** inside the UI.
+## Local setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python desktop_app.py
+npm install
+npm run dev
 ```
 
-Windows Command Prompt activation command:
+Open http://localhost:3000.
 
-```bat
-.venv\Scripts\activate
-```
+### Environment
 
-## Desktop Workflow
-
-1. Open **Role Setup** tab and create/save a role.
-2. Go to **Search** tab and fetch candidates for the saved role.
-3. Select a candidate row.
-4. Go to **Candidate Report / Outreach** tab and click:
-   - **Get Score**
-   - **Generate Report**
-   - **Log Outreach** (optional)
-
-## Test
+Create `.env.local`:
 
 ```bash
-pytest -q
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_ADMIN_EMAIL=admin@svov.academy
 ```
 
-## Quick Smoke-Test Checklist
+If Supabase vars are missing, the app runs in local-dev mode using seeded in-memory content.
 
-- [ ] Launch backend (`uvicorn src.app:app --reload`) or start it from desktop app.
-- [ ] Open desktop app with `python desktop_app.py`.
-- [ ] Create a role and verify role ID appears in the app.
-- [ ] Search candidates and verify list rows are shown.
-- [ ] Select a candidate and generate score/report.
-- [ ] Log outreach and confirm success message.
+## Database schema + seed
+
+- Migration: `supabase/migrations/001_init.sql`
+- Seed script: `scripts/seed.sql`
+
+Apply with your preferred Supabase workflow (CLI or SQL editor).
 
 ## Notes
 
-- Uses SQLite for quick-start local execution.
-- Seeds one demo candidate on startup so search/report endpoints work immediately.
+- Sample content includes **1 module** and **3 lessons**.
+- Example Markdown files are included under `/content` for local authoring.
