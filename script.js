@@ -830,24 +830,41 @@ function consolidateReportRows(rows){
   rows.forEach((r)=>{
     const d = new Date(r.parsedDate);
     d.setHours(0,0,0,0);
-    const key = `${r.source}|${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}|${String(r.client || '').toLowerCase().trim()}`;
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const locationKey = String(r.location || '').toLowerCase().trim();
+    const clientKey = String(r.client || '').toLowerCase().trim();
+    const key = r.source === 'BD' ? `${r.source}|${dateKey}|${locationKey}` : `${r.source}|${dateKey}|${clientKey}`;
+
     if (!grouped.has(key)) {
-      grouped.set(key, { ...r, parsedDate: d, ownerSet: new Set([r.owner].filter(Boolean)), notesSet: new Set([r.notes].filter(Boolean)) });
+      grouped.set(key, {
+        ...r,
+        parsedDate: d,
+        ownerSet: new Set([r.owner].filter(Boolean)),
+        notesSet: new Set([r.notes].filter(Boolean)),
+        contactSet: new Set([r.contact].filter(Boolean))
+      });
       return;
     }
+
     const item = grouped.get(key);
     if (r.owner) item.ownerSet.add(r.owner);
     if (r.notes) item.notesSet.add(r.notes);
+    if (r.contact) item.contactSet.add(r.contact);
     if (!item.task || item.task === '-') item.task = r.task;
     if (!item.category || item.category === '-') item.category = r.category;
     if (!item.project || item.project === '-') item.project = r.project;
+    if (!item.client || item.client === '-') item.client = r.client;
+    if (!item.location || item.location === '-') item.location = r.location;
   });
+
   return Array.from(grouped.values()).map((r)=>({
     ...r,
     owner: Array.from(r.ownerSet).join(' | ') || '-',
     notes: Array.from(r.notesSet).join(' | ') || '-',
+    contact: Array.from(r.contactSet).join(' | ') || '-',
     ownerSet: undefined,
-    notesSet: undefined
+    notesSet: undefined,
+    contactSet: undefined
   }));
 }
 
@@ -862,7 +879,9 @@ async function generatePdfReport(){
     owner: r.Owner || '-',
     category: r.Category || '-',
     project: r['Project Name'] || '-',
-    notes: r['Meeting Notes'] || '-'
+    notes: r['Meeting Notes'] || '-',
+    contact: r['Client Contact'] || '-',
+    location: r.Location || '-'
   });
 
   const eventDateCol = findEventColumn('date') || 'Dates Confirmed';
@@ -881,7 +900,9 @@ async function generatePdfReport(){
     owner: r[eventSponsorCol] || '-',
     category: r[eventCategoryCol] || '-',
     project: '-',
-    notes: r[eventNotesCol] || '-'
+    notes: r[eventNotesCol] || '-',
+    contact: '-',
+    location: '-'
   });
 
   let rows = [];
@@ -890,7 +911,7 @@ async function generatePdfReport(){
 
   const validRows = rows
     .filter((r)=>r.parsedDate)
-    .filter((r)=>!(String(r.client || '').trim().toLowerCase() === 'tbd' && String(r.status || '').trim().toLowerCase() === 'incomplete'))
+    .filter((r)=>String(r.status || '').trim().toLowerCase() !== 'incomplete')
     .map((r)=>({ ...r, parsedDate: new Date(r.parsedDate) }));
 
   const useRolling = !!el.reportRolling.checked;
@@ -980,7 +1001,7 @@ async function generatePdfReport(){
       const line = `${i+1}. [${r.source}] ${formatDateMMDDYY(r.rawDate)} | ${r.task} | ${r.client} | ${r.status}`;
       writeWrapped(line, 18, 172);
       if (el.reportDetails.value === 'full') {
-        writeWrapped(`Owner:${r.owner} Category:${r.category} Project:${r.project}`, 22, 168);
+        writeWrapped(`Owner:${r.owner} Client Contact:${r.contact} Category:${r.category} Project:${r.project}`, 22, 168);
         writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
       }
     });
