@@ -178,6 +178,10 @@
             <label>Report Notes
               <textarea id="report-notes" rows="4" placeholder="Add notes for this export (appears below the G2 Sheet Table section)..."></textarea>
             </label>
+            <label>Report Note Images (optional)
+              <input id="report-notes-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-notes-images-status">No note images selected.</p>
             <label>Report Header Logo Image (optional override)<input id="report-logo-input" type="file" accept=".png,.jpg,.jpeg,.webp" /></label>
             <button id="generate-report" type="button">Generate PDF</button>
             <p class="hint" id="report-status">Choose Rolling 60 Day or Custom Date Range, then export.</p>

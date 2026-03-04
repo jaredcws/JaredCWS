@@ -6,7 +6,7 @@ const state = {
   sheets: {}, bdSheet: "", bdRows: [], g2Rows: [], selectedSheet: "",
   selectedId: null, selectedGroupIds: [], detailEditMode: false, activeView: "business-development", clientsExpanded: false, renderRows: [],
   g2Loaded: false, activeBdTab: "calendar", eventColumns: [], eventHeaderRow: null, eventsBucket: "upcoming",
-  goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", selectedProposalId: null
+  goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", reportNotesImages: [], selectedProposalId: null
 };
 
 const seedBdRows = [
@@ -29,7 +29,7 @@ const el = {
   newDate: document.getElementById("new-date"), newTask: document.getElementById("new-task"), newAccountNotes: document.getElementById("new-account-notes"), newCategory: document.getElementById("new-category"), newOwner: document.getElementById("new-owner"), newClientContact: document.getElementById("new-client-contact"), newLocation: document.getElementById("new-location"), newClient: document.getElementById("new-client"), newSubClient: document.getElementById("new-sub-client"), newStatus: document.getElementById("new-status"), newMeetingNotes: document.getElementById("new-meeting-notes"), newAction: document.getElementById("new-action"), newSubAction: document.getElementById("new-sub-action"), newProjectName: document.getElementById("new-project-name"), saveEvent: document.getElementById("save-event"),
   sheetCalendar: document.getElementById("sheet-calendar"), sheetG2: document.getElementById("sheet-g2"), toggleClients: document.getElementById("toggle-clients"), clientSheetList: document.getElementById("client-sheet-list"),
   sheetTitle: document.getElementById("sheet-title"), sheetTable: document.getElementById("sheet-table"),
-  reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
+  reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportNotesImages: document.getElementById("report-notes-images"), reportNotesImagesStatus: document.getElementById("report-notes-images-status"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
 };
 
 const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1680,6 +1680,50 @@ async function generatePdfReport(){
     y += 3;
   }
 
+  const getImageFormat = (dataUrl)=>{
+    if (typeof dataUrl !== 'string') return 'PNG';
+    if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) return 'JPEG';
+    if (dataUrl.startsWith('data:image/webp')) return 'WEBP';
+    return 'PNG';
+  };
+
+  const getImageSize = (dataUrl)=>new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve({ width: img.width || 1, height: img.height || 1 });
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+
+  if (state.reportNotesImages.length) {
+    ensurePage(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Report Note Images', 18, y);
+    y += 5;
+
+    for (let i = 0; i < state.reportNotesImages.length; i += 1) {
+      const image = state.reportNotesImages[i];
+      try {
+        const dims = await getImageSize(image.dataUrl);
+        const maxW = 170;
+        const w = Math.min(maxW, dims.width);
+        const h = Math.max(12, w * (dims.height / Math.max(dims.width, 1)));
+        ensurePage(h + 10);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(90, 90, 90);
+        doc.text(`${i + 1}. ${image.name || 'Note image'}`, 18, y);
+        y += 4;
+        doc.addImage(image.dataUrl, getImageFormat(image.dataUrl), 18, y, w, h);
+        y += h + 4;
+        doc.setTextColor(30, 30, 30);
+      } catch (_err) {
+        writeWrapped(`${i + 1}. Unable to render note image: ${image.name || 'Unknown file'}`, 18, 178);
+      }
+    }
+    y += 2;
+  }
+
   if (useRolling) {
     const upcomingRangeText = `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`;
     const pastRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`;
@@ -1911,6 +1955,29 @@ function init(){
     const fr = new FileReader();
     fr.onload = (ev)=>{ state.reportLogoDataUrl = String(ev.target?.result || ''); };
     fr.readAsDataURL(f);
+  });
+  el.reportNotesImages?.addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      state.reportNotesImages = [];
+      if (el.reportNotesImagesStatus) el.reportNotesImagesStatus.textContent = 'No note images selected.';
+      return;
+    }
+
+    const toDataUrl = (file)=>new Promise((resolve, reject)=>{
+      const fr = new FileReader();
+      fr.onload = ()=>resolve({ name: file.name, dataUrl: String(fr.result || '') });
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+
+    const loaded = await Promise.all(files.map(toDataUrl));
+    state.reportNotesImages = loaded.filter((item)=>item.dataUrl);
+    if (el.reportNotesImagesStatus) {
+      el.reportNotesImagesStatus.textContent = state.reportNotesImages.length
+        ? `${state.reportNotesImages.length} note image(s) ready for export.`
+        : 'No note images selected.';
+    }
   });
   el.generateReport.addEventListener('click', generatePdfReport);
 
