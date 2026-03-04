@@ -1165,6 +1165,60 @@ function consolidateEventRows(rows){
     .concat(rows.filter((r)=>r.source !== 'EV'));
 }
 
+function consolidateDisplayRows(rows){
+  const grouped = new Map();
+  rows.forEach((r)=>{
+    const d = new Date(r.parsedDate);
+    d.setHours(0,0,0,0);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const taskKey = String(r.task || '').toLowerCase().trim();
+    const statusKey = String(r.status || '').toLowerCase().trim();
+    const key = `${r.source}|${dateKey}|${taskKey}|${statusKey}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        ...r,
+        parsedDate: d,
+        clientSet: new Set([r.client].filter(Boolean)),
+        ownerSet: new Set([r.owner].filter(Boolean)),
+        contactSet: new Set([r.contact].filter(Boolean)),
+        notesSet: new Set([r.notes].filter(Boolean)),
+        categorySet: new Set([r.category].filter(Boolean)),
+        projectSet: new Set([r.project].filter(Boolean)),
+        locationSet: new Set([r.location].filter(Boolean))
+      });
+      return;
+    }
+
+    const item = grouped.get(key);
+    if (r.client) item.clientSet.add(r.client);
+    if (r.owner) item.ownerSet.add(r.owner);
+    if (r.contact) item.contactSet.add(r.contact);
+    if (r.notes) item.notesSet.add(r.notes);
+    if (r.category) item.categorySet.add(r.category);
+    if (r.project) item.projectSet.add(r.project);
+    if (r.location) item.locationSet.add(r.location);
+  });
+
+  return Array.from(grouped.values()).map((r)=>({
+    ...r,
+    client: Array.from(r.clientSet).join(', ') || '-',
+    owner: Array.from(r.ownerSet).join(', ') || '-',
+    contact: Array.from(r.contactSet).join(', ') || '-',
+    notes: Array.from(r.notesSet).join(', ') || '-',
+    category: Array.from(r.categorySet).join(', ') || '-',
+    project: Array.from(r.projectSet).join(', ') || '-',
+    location: Array.from(r.locationSet).join(', ') || '-',
+    clientSet: undefined,
+    ownerSet: undefined,
+    contactSet: undefined,
+    notesSet: undefined,
+    categorySet: undefined,
+    projectSet: undefined,
+    locationSet: undefined
+  }));
+}
+
 async function generatePdfReport(){
   const mapBd = (r)=>({
     source: 'BD',
@@ -1271,6 +1325,7 @@ async function generatePdfReport(){
     let out = rows.filter((r)=>r.source !== 'PR' && r.source !== 'SM');
     out = consolidateReportRows(out);
     out = consolidateEventRows(out);
+    out = consolidateDisplayRows(out);
     return out.sort(sortByDate);
   };
 
