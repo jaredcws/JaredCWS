@@ -1127,6 +1127,7 @@ function consolidateReportRows(rows){
         ...r,
         parsedDate: d,
         ownerSet: new Set([r.owner].filter(Boolean)),
+        clientSet: new Set([r.client].filter(Boolean)),
         notesSet: new Set([r.notes].filter(Boolean)),
         contactSet: new Set([r.contact].filter(Boolean))
       });
@@ -1135,6 +1136,7 @@ function consolidateReportRows(rows){
 
     const item = grouped.get(key);
     if (r.owner) item.ownerSet.add(r.owner);
+    if (r.client) item.clientSet.add(r.client);
     if (r.notes) item.notesSet.add(r.notes);
     if (r.contact) item.contactSet.add(r.contact);
     if (!item.task || item.task === '-') item.task = r.task;
@@ -1146,10 +1148,12 @@ function consolidateReportRows(rows){
 
   return Array.from(grouped.values()).map((r)=>({
     ...r,
-    owner: Array.from(r.ownerSet).join(' | ') || '-',
-    notes: Array.from(r.notesSet).join(' | ') || '-',
-    contact: Array.from(r.contactSet).join(' | ') || '-',
+    owner: Array.from(r.ownerSet).join(', ') || '-',
+    client: Array.from(r.clientSet).join(', ') || '-',
+    notes: Array.from(r.notesSet).join(', ') || '-',
+    contact: Array.from(r.contactSet).join(', ') || '-',
     ownerSet: undefined,
+    clientSet: undefined,
     notesSet: undefined,
     contactSet: undefined
   }));
