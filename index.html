@@ -152,9 +152,13 @@
           <header class="main-header"><div><p class="eyebrow">Reports</p><h2>Export Efforts / Events</h2></div></header>
           <article class="feed-column">
             <div class="mini-form two-col">
-              <label>Dataset
-                <select id="report-dataset"><option value="bd">BD Calendar</option><option value="social">Social Media Calendar</option><option value="proposals">Proposal Pipeline</option><option value="g2">Events 2026</option><option value="both">All Sources</option></select>
-              </label>
+              <fieldset class="report-dataset-group">
+                <legend>Datasets</legend>
+                <label class="report-check"><input id="report-ds-bd" type="checkbox" checked /> BD Calendar</label>
+                <label class="report-check"><input id="report-ds-events" type="checkbox" checked /> Events 2026</label>
+                <label class="report-check"><input id="report-ds-social" type="checkbox" /> Social Media Calendar</label>
+                <label class="report-check"><input id="report-ds-proposals" type="checkbox" /> Proposal Pipeline</label>
+              </fieldset>
               <label>Include Details<select id="report-details"><option value="summary">Summary</option><option value="full">Full</option></select></label>
             </div>
             <div class="report-mode-row">
@@ -171,6 +175,9 @@
               <label>From Date<input id="report-from" type="date" /></label>
               <label>To Date<input id="report-to" type="date" /></label>
             </div>
+            <label>Report Notes
+              <textarea id="report-notes" rows="4" placeholder="Add notes for this export (appears below the G2 Sheet Table section)..."></textarea>
+            </label>
             <label>Report Header Logo Image (optional override)<input id="report-logo-input" type="file" accept=".png,.jpg,.jpeg,.webp" /></label>
             <button id="generate-report" type="button">Generate PDF</button>
             <p class="hint" id="report-status">Choose Rolling 60 Day or Custom Date Range, then export.</p>

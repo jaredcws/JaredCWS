@@ -29,7 +29,7 @@ const el = {
   newDate: document.getElementById("new-date"), newTask: document.getElementById("new-task"), newAccountNotes: document.getElementById("new-account-notes"), newCategory: document.getElementById("new-category"), newOwner: document.getElementById("new-owner"), newClientContact: document.getElementById("new-client-contact"), newLocation: document.getElementById("new-location"), newClient: document.getElementById("new-client"), newSubClient: document.getElementById("new-sub-client"), newStatus: document.getElementById("new-status"), newMeetingNotes: document.getElementById("new-meeting-notes"), newAction: document.getElementById("new-action"), newSubAction: document.getElementById("new-sub-action"), newProjectName: document.getElementById("new-project-name"), saveEvent: document.getElementById("save-event"),
   sheetCalendar: document.getElementById("sheet-calendar"), sheetG2: document.getElementById("sheet-g2"), toggleClients: document.getElementById("toggle-clients"), clientSheetList: document.getElementById("client-sheet-list"),
   sheetTitle: document.getElementById("sheet-title"), sheetTable: document.getElementById("sheet-table"),
-  reportDataset: document.getElementById("report-dataset"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalContentList: document.getElementById("proposal-content-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
+  reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
 };
 
 const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1219,6 +1219,21 @@ function consolidateDisplayRows(rows){
   }));
 }
 
+function getSelectedReportDatasets(){
+  const selected = [];
+  if (el.reportDsBd?.checked) selected.push('bd');
+  if (el.reportDsEvents?.checked) selected.push('g2');
+  if (el.reportDsSocial?.checked) selected.push('social');
+  if (el.reportDsProposals?.checked) selected.push('proposals');
+
+  if (!selected.length && el.reportDataset) {
+    const ds = el.reportDataset.value;
+    if (ds === 'both') return ['bd','g2','social','proposals'];
+    return [ds];
+  }
+  return selected;
+}
+
 async function generatePdfReport(){
   const mapBd = (r)=>({
     source: 'BD',
@@ -1291,11 +1306,15 @@ async function generatePdfReport(){
   });
 
   let rows = [];
-  const ds = el.reportDataset.value;
-  if (ds === 'bd' || ds === 'both') rows = rows.concat(state.bdRows.map(mapBd));
-  if (ds === 'social' || ds === 'both') rows = rows.concat(state.socialRows.map(mapSocial));
-  if (ds === 'proposals' || ds === 'both') rows = rows.concat(state.proposalRows.map(mapProposals));
-  if (ds === 'g2' || ds === 'both') rows = rows.concat(state.g2Rows.map(mapEvents));
+  const selectedDatasets = getSelectedReportDatasets();
+  if (!selectedDatasets.length) {
+    el.reportStatus.textContent = 'Select at least one dataset before generating the report.';
+    return;
+  }
+  if (selectedDatasets.includes('bd')) rows = rows.concat(state.bdRows.map(mapBd));
+  if (selectedDatasets.includes('social')) rows = rows.concat(state.socialRows.map(mapSocial));
+  if (selectedDatasets.includes('proposals')) rows = rows.concat(state.proposalRows.map(mapProposals));
+  if (selectedDatasets.includes('g2')) rows = rows.concat(state.g2Rows.map(mapEvents));
 
   const validRows = rows
     .filter((r)=>r.parsedDate)
@@ -1645,6 +1664,22 @@ async function generatePdfReport(){
   }
 
   y = Math.max(y + 4, chartBottomY + 4);
+
+  const reportNotes = String(el.reportNotes?.value || '').trim();
+  if (reportNotes) {
+    ensurePage(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Report Notes', 18, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    reportNotes.split(/\r?\n/).forEach((line)=>{
+      writeWrapped(line || ' ', 18, 178);
+    });
+    y += 3;
+  }
+
   if (useRolling) {
     const upcomingRangeText = `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`;
     const pastRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`;

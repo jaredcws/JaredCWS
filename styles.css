@@ -703,6 +703,33 @@ td {
 
 
 
+
+.report-dataset-group {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.report-dataset-group legend {
+  padding: 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+textarea {
+  width: 100%;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  resize: vertical;
+  min-height: 84px;
+}
+
 .report-mode-row {
   display: flex;
   gap: 1rem;
