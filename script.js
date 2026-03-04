@@ -1,9 +1,12 @@
 const REQUIRED_FIELDS = ["Date","Task","Account / Notes","Category","Owner","Client Contact","Location","Client","Sub-Client","Status","Meeting Notes","Action","Sub Action","Project Name"];
 const DETAIL_FIELDS = ["Date","Task","Client","Sub-Client","Status","Owner","Category","Project Name","Location","Client Contact","Account / Notes","Meeting Notes","Action","Sub Action","Post Link"];
+const THEME_STORAGE_KEY = "command-center-theme";
+const THEMES = { DARK: "dark", LIGHT: "light" };
 const state = {
   sheets: {}, bdSheet: "", bdRows: [], g2Rows: [], selectedSheet: "",
   selectedId: null, selectedGroupIds: [], detailEditMode: false, activeView: "business-development", clientsExpanded: false, renderRows: [],
   g2Loaded: false, activeBdTab: "calendar", eventColumns: [], eventHeaderRow: null, eventsBucket: "upcoming",
+  goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", reportNotesImages: [], reportEffortsImages: [], selectedProposalId: null
   goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: ""
 };
 
@@ -12,6 +15,12 @@ const seedBdRows = [
 ];
 
 const el = {
+  nav: document.querySelectorAll(".nav-links button[data-view]"), themeToggle: document.getElementById("theme-toggle"),
+  projectsView: document.getElementById("projects-view"), bdView: document.getElementById("bd-view"), proposalsView: document.getElementById("proposals-view"), reportsView: document.getElementById("reports-view"), sheetView: document.getElementById("sheet-view"),
+  sourcePanel: document.getElementById("source-panel"), addPanel: document.getElementById("bd-event-panel"), sheetsPanel: document.getElementById("sheet-list-panel"),
+  bdUrlInput: document.getElementById("bd-url-input"), g2UrlInput: document.getElementById("events-url-input"), goalsUrlInput: document.getElementById("goals-url-input"), socialUrlInput: document.getElementById("social-url-input"),
+  loadBdUrl: document.getElementById("load-bd-url"), loadG2Url: document.getElementById("load-events-url"), loadGoalsUrl: document.getElementById("load-goals-url"), loadSocialUrl: document.getElementById("load-social-url"),
+  bdFileInput: document.getElementById("workbook-input"), g2FileInput: document.getElementById("events-workbook-input"), goalsFileInput: document.getElementById("goals-workbook-input"), socialFileInput: document.getElementById("social-workbook-input"), proposalFileInput: document.getElementById("proposal-workbook-input"), workbookStatus: document.getElementById("workbook-status"),
   nav: document.querySelectorAll(".nav-links button[data-view]"),
   projectsView: document.getElementById("projects-view"), bdView: document.getElementById("bd-view"), reportsView: document.getElementById("reports-view"), sheetView: document.getElementById("sheet-view"),
   sourcePanel: document.getElementById("source-panel"), addPanel: document.getElementById("bd-event-panel"), sheetsPanel: document.getElementById("sheet-list-panel"),
@@ -27,6 +36,7 @@ const el = {
   newDate: document.getElementById("new-date"), newTask: document.getElementById("new-task"), newAccountNotes: document.getElementById("new-account-notes"), newCategory: document.getElementById("new-category"), newOwner: document.getElementById("new-owner"), newClientContact: document.getElementById("new-client-contact"), newLocation: document.getElementById("new-location"), newClient: document.getElementById("new-client"), newSubClient: document.getElementById("new-sub-client"), newStatus: document.getElementById("new-status"), newMeetingNotes: document.getElementById("new-meeting-notes"), newAction: document.getElementById("new-action"), newSubAction: document.getElementById("new-sub-action"), newProjectName: document.getElementById("new-project-name"), saveEvent: document.getElementById("save-event"),
   sheetCalendar: document.getElementById("sheet-calendar"), sheetG2: document.getElementById("sheet-g2"), toggleClients: document.getElementById("toggle-clients"), clientSheetList: document.getElementById("client-sheet-list"),
   sheetTitle: document.getElementById("sheet-title"), sheetTable: document.getElementById("sheet-table"),
+  reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportNotesImages: document.getElementById("report-notes-images"), reportNotesImagesStatus: document.getElementById("report-notes-images-status"), reportEfforts: document.getElementById("report-efforts"), reportEffortsImages: document.getElementById("report-efforts-images"), reportEffortsImagesStatus: document.getElementById("report-efforts-images-status"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalContentList: document.getElementById("proposal-content-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
   reportDataset: document.getElementById("report-dataset"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status")
 };
 
@@ -301,10 +311,157 @@ function parseSocialSheetRows(ws){
   return out;
 }
 
+
+function normalizeProposalPhase(value){
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return 'Team Development';
+  if (raw.includes('complete') || raw.includes('submitted')) return 'Complete';
+  if (raw.includes('content')) return 'Content Development';
+  if (raw.includes('team')) return 'Team Development';
+  return 'Team Development';
+}
+
+function proposalResultClass(result){
+  const raw = String(result || '').trim().toLowerCase();
+  if (raw.includes('won')) return 'won';
+  if (raw.includes('lost')) return 'lost';
+  if (raw.includes('short')) return 'shortlisted';
+  if (raw.includes('no response')) return 'no-response';
+  return '';
+}
+
+function parseProposalRows(ws){
+  const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  if (!matrix.length) return [];
+
+  let startRow = 0;
+  for (let i = 0; i < Math.min(8, matrix.length); i += 1) {
+    const rowNorm = matrix[i].map((c)=>norm(c));
+    if (rowNorm.includes('proposalname') || rowNorm.includes('phase') || rowNorm.includes('proposaldeadline')) {
+      startRow = i + 1;
+      break;
+    }
+  }
+
+  const rows = matrix.slice(startRow);
+  const grouped = new Map();
+
+  rows.forEach((row)=>{
+    const contentDeadline = row[0] ?? '';
+    const proposalDeadline = row[1] ?? '';
+    const proposalName = String(row[2] ?? '').trim();
+    const proposalDescription = String(row[3] ?? '').trim();
+    const architect = String(row[4] ?? '').trim();
+    const result = String(row[5] ?? '').trim();
+    const contentLink = String(row[6] ?? '').trim();
+    const phase = normalizeProposalPhase(row[7] ?? '');
+
+    if (!proposalName) return;
+
+    const key = proposalName.toLowerCase();
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        id: uid('PR'),
+        'Content Deadline': contentDeadline,
+        'Proposal Deadline': proposalDeadline,
+        'Proposal Name': proposalName,
+        'Proposal Description': proposalDescription,
+        Architect: architect,
+        Result: result,
+        'Content Link': contentLink,
+        Phase: phase,
+        _proposal: true,
+        _resultClass: proposalResultClass(result)
+      });
+      return;
+    }
+
+    const current = grouped.get(key);
+    const archSet = new Set(String(current.Architect || '').split('|').map((v)=>v.trim()).filter(Boolean));
+    if (architect) archSet.add(architect);
+    current.Architect = Array.from(archSet).join(' | ');
+    if (!current['Content Deadline']) current['Content Deadline'] = contentDeadline;
+    if (!current['Proposal Deadline']) current['Proposal Deadline'] = proposalDeadline;
+    if (!current['Proposal Description']) current['Proposal Description'] = proposalDescription;
+    if (!current.Result) current.Result = result;
+    if (!current['Content Link']) current['Content Link'] = contentLink;
+    current.Phase = normalizeProposalPhase(current.Phase || phase);
+    current._resultClass = proposalResultClass(current.Result);
+  });
+
+  return Array.from(grouped.values());
+}
+
+function getProposalCalendarRows(){
+  const rows = [];
+  state.proposalRows.forEach((proposal)=>{
+    const name = proposal['Proposal Name'] || 'Proposal';
+    const architect = proposal.Architect || '';
+    const phase = proposal.Phase || 'Team Development';
+    const common = {
+      Proposal: name,
+      Architect: architect,
+      Phase: phase,
+      Result: proposal.Result || '',
+      'Content Link': proposal['Content Link'] || '',
+      'Proposal Description': proposal['Proposal Description'] || '',
+      _proposal: true,
+      _proposalId: proposal.id,
+      _resultClass: proposal._resultClass || ''
+    };
+
+    const contentDate = parseDate(proposal['Content Deadline']);
+    if (contentDate) {
+      rows.push({
+        id: `${proposal.id}-content`,
+        Date: iso(contentDate.getFullYear(), contentDate.getMonth(), contentDate.getDate()),
+        Task: `Proposal Content Due: ${name}`,
+        Status: phase,
+        Owner: architect,
+        Category: 'Proposal',
+        Client: 'Proposal Pipeline',
+        'Project Name': name,
+        'Account / Notes': proposal['Proposal Description'] || '',
+        'Client Contact': architect,
+        Location: 'Proposal Pipeline',
+        'Meeting Notes': '',
+        Action: 'Content Deadline',
+        'Sub Action': '',
+        'Sub-Client': '',
+        ...common
+      });
+    }
+
+    const submissionDate = parseDate(proposal['Proposal Deadline']);
+    if (submissionDate) {
+      rows.push({
+        id: `${proposal.id}-submission`,
+        Date: iso(submissionDate.getFullYear(), submissionDate.getMonth(), submissionDate.getDate()),
+        Task: `Proposal Submission Due: ${name}`,
+        Status: phase,
+        Owner: architect,
+        Category: 'Proposal',
+        Client: 'Proposal Pipeline',
+        'Project Name': name,
+        'Account / Notes': proposal['Proposal Description'] || '',
+        'Client Contact': architect,
+        Location: 'Proposal Pipeline',
+        'Meeting Notes': '',
+        Action: 'Proposal Deadline',
+        'Sub Action': '',
+        'Sub-Client': '',
+        ...common
+      });
+    }
+  });
+  return rows;
+}
+
 function getCalendarRows(){
   const rows = [];
   if (state.showBdCalendar) rows.push(...state.bdRows);
   if (state.showSocialCalendar) rows.push(...state.socialRows);
+  if (state.proposalLoaded) rows.push(...getProposalCalendarRows());
   return rows;
 }
 
@@ -391,6 +548,8 @@ function loadSeed(){
   state.g2SheetTable = [];
   state.socialRows = [];
   state.socialLoaded = false;
+  state.proposalRows = [];
+  state.proposalLoaded = false;
   state.showBdCalendar = true;
   state.showSocialCalendar = true;
   state.sheets = {};
@@ -438,6 +597,21 @@ function ingestWorkbook(buffer, label, target){
     state.showSocialCalendar = true;
     state.selectedId = null;
     el.workbookStatus.textContent = `SOCIAL loaded from ${label}. Parsed ${socialRows.length} rows from sheet ${socialSheetName}.`;
+    refreshAll();
+    return;
+  }
+
+  if (target === "proposal") {
+    const proposalSheet = wb.Sheets[wb.SheetNames[0]];
+    if (!proposalSheet) {
+      el.workbookStatus.textContent = 'Proposal spreadsheet could not be read.';
+      return;
+    }
+    const proposalRows = parseProposalRows(proposalSheet);
+    state.proposalRows = proposalRows;
+    state.proposalLoaded = proposalRows.length > 0;
+    state.selectedProposalId = proposalRows[0]?.id || null;
+    el.workbookStatus.textContent = `PROPOSALS loaded from ${label}. Parsed ${proposalRows.length} proposals.`;
     refreshAll();
     return;
   }
@@ -581,6 +755,7 @@ async function loadFromUrl(url, target){
 function consolidateRows(rows){
   const map = new Map();
   for (const row of rows) {
+    const key = row._social ? `${row.Date}|social|${(row.Task||"").toLowerCase().trim()}` : (row._proposal ? `${row.Date}|proposal|${row._proposalId || row.id}|${row.Action || ""}` : `${row.Date}|${(row.Client || "").toLowerCase().trim()}`);
     const key = row._social ? `${row.Date}|social|${(row.Task||"").toLowerCase().trim()}` : `${row.Date}|${(row.Client || "").toLowerCase().trim()}`;
     if (!map.has(key)) {
       map.set(key, { ...row, _sourceIds: [row.id], _owners: new Set([row.Owner].filter(Boolean)), _contacts: new Set([row["Client Contact"]].filter(Boolean)) });
@@ -676,6 +851,7 @@ function renderCalendar(){
       const dateVal = r.Date || "-";
       const taskVal = r.Task || "Untitled";
       const metaVal = `${r.Client || "-"} · ${r.Status || "-"}`;
+      return `<button class="list-entry event-chip ${r._social ? "social-chip" : ""} ${r._proposal ? "proposal-chip" : ""}" type="button" data-id="${r.id}"><span class="list-date">${dateVal}</span><span class="list-task">${taskVal}</span><span class="list-meta">${metaVal}</span></button>`;
       return `<button class="list-entry event-chip ${r._social ? "social-chip" : ""}" type="button" data-id="${r.id}"><span class="list-date">${dateVal}</span><span class="list-task">${taskVal}</span><span class="list-meta">${metaVal}</span></button>`;
     }).join('');
     renderDetailPanel();
@@ -700,6 +876,7 @@ function renderCalendar(){
       const key = iso(date.getFullYear(), date.getMonth(), date.getDate());
       const inMonth = date.getMonth()===month;
       const entries = byDate[key] || [];
+      html += `<div class="calendar-cell ${inMonth?'':'empty'}" data-date="${key}"><div class="cell-day">${date.getDate()}</div>${entries.map(e=>`<button class="event-chip ${e._social ? "social-chip" : ""} ${e._proposal ? "proposal-chip" : ""}" type="button" data-id="${e.id}">${e.Task||'Untitled'}</button>`).join('')}</div>`;
       html += `<div class="calendar-cell ${inMonth?'':'empty'}" data-date="${key}"><div class="cell-day">${date.getDate()}</div>${entries.map(e=>`<button class="event-chip ${e._social ? "social-chip" : ""}" type="button" data-id="${e.id}">${e.Task||'Untitled'}</button>`).join('')}</div>`;
     }
   }
@@ -708,6 +885,9 @@ function renderCalendar(){
 }
 
 function getCalendarDetailFields(row){
+  if (row && row._proposal) {
+    return ['Task','Date','Proposal','Phase','Result','Architect','Proposal Description','Content Link'].filter((f)=>row[f] != null && String(row[f]).trim() !== '');
+  }
   if (row && row._social) {
     return ['Date','Subject','Project Name','Caption','Media Type','Post Link'].filter((f)=>row[f] != null && String(row[f]).trim() !== '');
   }
@@ -804,10 +984,131 @@ function renderSheet(name){
   el.sheetTable.innerHTML = `<div class="table-wrap"><table>${head}${body}</table></div>`;
 }
 
+
+function renderProposalDetails(){
+  const row = state.proposalRows.find((r)=>r.id === state.selectedProposalId);
+  if (!row) {
+    el.proposalLayout?.classList.remove('with-details');
+    if (el.proposalDetailPanel) el.proposalDetailPanel.hidden = true;
+    el.proposalDetailContent.innerHTML = '<p class="hint">Select a completed proposal to view details.</p>';
+    if (el.proposalSelectedId) el.proposalSelectedId.textContent = 'None';
+    return;
+  }
+
+  el.proposalLayout?.classList.add('with-details');
+  if (el.proposalDetailPanel) el.proposalDetailPanel.hidden = false;
+
+  const link = String(row['Content Link'] || '').trim();
+  const href = normalizeProposalHref(link);
+  const linkHtml = href
+    ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${link}</a>`
+    : (link || '-');
+
+  el.proposalDetailContent.innerHTML = `
+    <div class="proposal-detail-shell">
+      <div class="proposal-detail-line"><span>Content Deadline</span><p>${formatDateMMDDYY(row['Content Deadline'])}</p></div>
+      <div class="proposal-detail-line"><span>RFP/RFQ Deadline</span><p>${formatDateMMDDYY(row['Proposal Deadline'])}</p></div>
+      <div class="proposal-detail-line"><span>Architect(s)</span><p>${row.Architect || '-'}</p></div>
+      <div class="proposal-detail-line"><span>Description</span><p>${row['Proposal Description'] || '-'}</p></div>
+      <div class="proposal-detail-line"><span>RFP Location</span><p>${linkHtml}</p></div>
+      <div class="proposal-detail-line"><span>Result</span><p>${row.Result || '-'}</p></div>
+    </div>
+  `;
+}
+
+function normalizeProposalHref(linkValue){
+  const raw = String(linkValue || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (/^www\./i.test(raw)) return `https://${raw}`;
+  return raw;
+}
+
+function proposalCardLink(row){
+  const link = String(row['Content Link'] || '').trim();
+  const href = normalizeProposalHref(link);
+  if (!href) return '-';
+  return `<a href="${href}" target="_blank" rel="noopener noreferrer">Live link to the RFP/RFQ file</a>`;
+}
+
+function proposalNameLink(row){
+  const name = row['Proposal Name'] || 'Untitled Proposal';
+  const link = String(row['Content Link'] || '').trim();
+  const href = normalizeProposalHref(link);
+  if (!href) return `<strong>${name}</strong>`;
+  return `<a href="${href}" target="_blank" rel="noopener noreferrer"><strong>${name}</strong></a>`;
+}
+
+function proposalCardHtml(row, phase){
+  const isSelected = row.id === state.selectedProposalId;
+  const content = formatDateMMDDYY(row['Content Deadline']);
+  const submit = formatDateMMDDYY(row['Proposal Deadline']);
+  const architect = row.Architect || '-';
+
+  if (phase === 'Complete') {
+    const resultClass = ` proposal-complete-${row._resultClass || 'default'}`;
+    return `<button class="proposal-card proposal-card-complete${isSelected ? ' selected' : ''}${resultClass}" type="button" data-id="${row.id}" data-phase="Complete">
+      <div class="proposal-card-top"><strong>Deadline - ${submit}</strong><span><strong>Result</strong><br/>${row.Result || '-'}</span></div>
+      <div class="proposal-card-name">${row['Proposal Name'] || 'Untitled Proposal'}</div>
+    </button>`;
+  }
+
+  const descriptionRow = phase === 'Content Development'
+    ? `<div class="proposal-row proposal-row-full"><span>Description</span><p>${row['Proposal Description'] || '-'}</p></div>`
+    : '';
+
+  const locationRow = `<div class="proposal-row proposal-row-full"><span>RFP Location</span><p>${proposalCardLink(row)}</p></div>`;
+
+  return `<div class="proposal-card proposal-card-stage" data-id="${row.id}" data-phase="${phase}">
+    <div class="proposal-card-grid">
+      <div class="proposal-row"><span>Content Deadline</span><p>${content}</p></div>
+      <div class="proposal-row"><span>RFP/RFQ Deadline</span><p>${submit}</p></div>
+      <div class="proposal-row proposal-row-full"><span>RFP/RFQ Name</span><p>${proposalNameLink(row)}</p></div>
+      <div class="proposal-row proposal-row-full"><span>Architect${phase === 'Content Development' ? '(s)' : ''}</span><p>${architect}</p></div>
+      ${descriptionRow}
+      ${locationRow}
+    </div>
+  </div>`;
+}
+
+function renderProposals(){
+  if (state.activeView !== 'proposals') return;
+  const query = String(el.proposalCompleteSearch?.value || '').trim().toLowerCase();
+
+  const phases = {
+    'Team Development': state.proposalRows.filter((r)=>r.Phase === 'Team Development'),
+    'Content Development': state.proposalRows.filter((r)=>r.Phase === 'Content Development'),
+    Complete: state.proposalRows.filter((r)=>r.Phase === 'Complete')
+  };
+
+  const completeRows = phases.Complete.filter((r)=>!query || [r['Proposal Name'], r.Architect, r.Result, r['Proposal Description']].join(' ').toLowerCase().includes(query));
+
+  const selectedIsComplete = !!completeRows.find((r)=>r.id === state.selectedProposalId);
+  if (!selectedIsComplete) state.selectedProposalId = null;
+
+  el.proposalCountTeam.textContent = String(phases['Team Development'].length);
+  el.proposalCountContent.textContent = String(phases['Content Development'].length);
+  el.proposalCountComplete.textContent = String(completeRows.length);
+
+  el.proposalTeamList.innerHTML = phases['Team Development'].map((r)=>proposalCardHtml(r, 'Team Development')).join('') || '<p class="hint">No proposals in this stage.</p>';
+  el.proposalContentList.innerHTML = phases['Content Development'].map((r)=>proposalCardHtml(r, 'Content Development')).join('') || '<p class="hint">No proposals in this stage.</p>';
+  el.proposalCompleteList.innerHTML = completeRows.map((r)=>proposalCardHtml(r, 'Complete')).join('') || '<p class="hint">No proposals in this stage.</p>';
+
+  renderProposalDetails();
+}
+
 function switchView(view){
   state.activeView = view;
   el.projectsView.hidden = view !== 'projects';
   el.bdView.hidden = view !== 'business-development';
+  el.proposalsView.hidden = view !== 'proposals';
+  el.reportsView.hidden = view !== 'reports';
+  el.sheetView.hidden = true;
+  const dataMode = view === 'business-development' || view === 'proposals';
+  el.sourcePanel.hidden = !dataMode;
+  el.addPanel.hidden = view !== 'business-development';
+  syncSheetsPanelVisibility();
+  if (view === 'proposals') renderProposals();
   el.reportsView.hidden = view !== 'reports';
   el.sheetView.hidden = true;
   const bdMode = view === 'business-development';
@@ -833,6 +1134,10 @@ function consolidateReportRows(rows){
     const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const locationKey = String(r.location || '').toLowerCase().trim();
     const clientKey = String(r.client || '').toLowerCase().trim();
+    const eventKey = String(r.task || '').toLowerCase().trim();
+    const key = r.source === 'BD'
+      ? `${r.source}|${dateKey}|${locationKey}`
+      : (r.source === 'EV' ? `${r.source}|${dateKey}|${eventKey}` : `${r.source}|${dateKey}|${clientKey}`);
     const key = r.source === 'BD' ? `${r.source}|${dateKey}|${locationKey}` : `${r.source}|${dateKey}|${clientKey}`;
 
     if (!grouped.has(key)) {
@@ -840,6 +1145,7 @@ function consolidateReportRows(rows){
         ...r,
         parsedDate: d,
         ownerSet: new Set([r.owner].filter(Boolean)),
+        clientSet: new Set([r.client].filter(Boolean)),
         notesSet: new Set([r.notes].filter(Boolean)),
         contactSet: new Set([r.contact].filter(Boolean))
       });
@@ -848,6 +1154,7 @@ function consolidateReportRows(rows){
 
     const item = grouped.get(key);
     if (r.owner) item.ownerSet.add(r.owner);
+    if (r.client) item.clientSet.add(r.client);
     if (r.notes) item.notesSet.add(r.notes);
     if (r.contact) item.contactSet.add(r.contact);
     if (!item.task || item.task === '-') item.task = r.task;
@@ -859,6 +1166,12 @@ function consolidateReportRows(rows){
 
   return Array.from(grouped.values()).map((r)=>({
     ...r,
+    owner: Array.from(r.ownerSet).join(', ') || '-',
+    client: Array.from(r.clientSet).join(', ') || '-',
+    notes: Array.from(r.notesSet).join(', ') || '-',
+    contact: Array.from(r.contactSet).join(', ') || '-',
+    ownerSet: undefined,
+    clientSet: undefined,
     owner: Array.from(r.ownerSet).join(' | ') || '-',
     notes: Array.from(r.notesSet).join(' | ') || '-',
     contact: Array.from(r.contactSet).join(' | ') || '-',
@@ -866,6 +1179,81 @@ function consolidateReportRows(rows){
     notesSet: undefined,
     contactSet: undefined
   }));
+}
+
+
+function consolidateEventRows(rows){
+  return consolidateReportRows(rows.filter((r)=>r.source === 'EV'))
+    .concat(rows.filter((r)=>r.source !== 'EV'));
+}
+
+function consolidateDisplayRows(rows){
+  const grouped = new Map();
+  rows.forEach((r)=>{
+    const d = new Date(r.parsedDate);
+    d.setHours(0,0,0,0);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const taskKey = String(r.task || '').toLowerCase().trim();
+    const statusKey = String(r.status || '').toLowerCase().trim();
+    const key = `${r.source}|${dateKey}|${taskKey}|${statusKey}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        ...r,
+        parsedDate: d,
+        clientSet: new Set([r.client].filter(Boolean)),
+        ownerSet: new Set([r.owner].filter(Boolean)),
+        contactSet: new Set([r.contact].filter(Boolean)),
+        notesSet: new Set([r.notes].filter(Boolean)),
+        categorySet: new Set([r.category].filter(Boolean)),
+        projectSet: new Set([r.project].filter(Boolean)),
+        locationSet: new Set([r.location].filter(Boolean))
+      });
+      return;
+    }
+
+    const item = grouped.get(key);
+    if (r.client) item.clientSet.add(r.client);
+    if (r.owner) item.ownerSet.add(r.owner);
+    if (r.contact) item.contactSet.add(r.contact);
+    if (r.notes) item.notesSet.add(r.notes);
+    if (r.category) item.categorySet.add(r.category);
+    if (r.project) item.projectSet.add(r.project);
+    if (r.location) item.locationSet.add(r.location);
+  });
+
+  return Array.from(grouped.values()).map((r)=>({
+    ...r,
+    client: Array.from(r.clientSet).join(', ') || '-',
+    owner: Array.from(r.ownerSet).join(', ') || '-',
+    contact: Array.from(r.contactSet).join(', ') || '-',
+    notes: Array.from(r.notesSet).join(', ') || '-',
+    category: Array.from(r.categorySet).join(', ') || '-',
+    project: Array.from(r.projectSet).join(', ') || '-',
+    location: Array.from(r.locationSet).join(', ') || '-',
+    clientSet: undefined,
+    ownerSet: undefined,
+    contactSet: undefined,
+    notesSet: undefined,
+    categorySet: undefined,
+    projectSet: undefined,
+    locationSet: undefined
+  }));
+}
+
+function getSelectedReportDatasets(){
+  const selected = [];
+  if (el.reportDsBd?.checked) selected.push('bd');
+  if (el.reportDsEvents?.checked) selected.push('g2');
+  if (el.reportDsSocial?.checked) selected.push('social');
+  if (el.reportDsProposals?.checked) selected.push('proposals');
+
+  if (!selected.length && el.reportDataset) {
+    const ds = el.reportDataset.value;
+    if (ds === 'both') return ['bd','g2','social','proposals'];
+    return [ds];
+  }
+  return selected;
 }
 
 async function generatePdfReport(){
@@ -882,6 +1270,22 @@ async function generatePdfReport(){
     notes: r['Meeting Notes'] || '-',
     contact: r['Client Contact'] || '-',
     location: r.Location || '-'
+  });
+
+  const mapSocial = (r)=>({
+    source: 'SM',
+    rawDate: r.Date,
+    parsedDate: parseDate(r.Date),
+    task: r.Subject || r.Task || '-',
+    client: 'Social Media',
+    status: r.Status || '-',
+    owner: r.Owner || '-',
+    category: r['Media Type'] || r.Category || '-',
+    project: r['Project Name'] || '-',
+    notes: r.Caption || r['Account / Notes'] || '-',
+    contact: '-',
+    location: r['Post Link'] || '-',
+    link: r['Post Link'] || '-'
   });
 
   const eventDateCol = findEventColumn('date') || 'Dates Confirmed';
@@ -905,6 +1309,34 @@ async function generatePdfReport(){
     location: '-'
   });
 
+  const mapProposals = (r)=>({
+    source: 'PR',
+    rawDate: r['Proposal Deadline'] || r['Content Deadline'],
+    parsedDate: parseDate(r['Proposal Deadline']) || parseDate(r['Content Deadline']),
+    task: r['Proposal Name'] || '-',
+    client: r.Architect || '-',
+    status: r.Phase || '-',
+    owner: r.Architect || '-',
+    category: 'Proposal',
+    project: r['Proposal Name'] || '-',
+    notes: r['Proposal Description'] || '-',
+    contact: r.Architect || '-',
+    location: 'Proposal Pipeline',
+    result: r.Result || '-',
+    contentDeadline: r['Content Deadline'] || '-',
+    proposalDeadline: r['Proposal Deadline'] || '-'
+  });
+
+  let rows = [];
+  const selectedDatasets = getSelectedReportDatasets();
+  if (!selectedDatasets.length) {
+    el.reportStatus.textContent = 'Select at least one dataset before generating the report.';
+    return;
+  }
+  if (selectedDatasets.includes('bd')) rows = rows.concat(state.bdRows.map(mapBd));
+  if (selectedDatasets.includes('social')) rows = rows.concat(state.socialRows.map(mapSocial));
+  if (selectedDatasets.includes('proposals')) rows = rows.concat(state.proposalRows.map(mapProposals));
+  if (selectedDatasets.includes('g2')) rows = rows.concat(state.g2Rows.map(mapEvents));
   let rows = [];
   if (el.reportDataset.value === 'bd' || el.reportDataset.value === 'both') rows = rows.concat(state.bdRows.map(mapBd));
   if (el.reportDataset.value === 'g2' || el.reportDataset.value === 'both') rows = rows.concat(state.g2Rows.map(mapEvents));
@@ -933,6 +1365,14 @@ async function generatePdfReport(){
 
   const sortByDate = (a,b)=>a.parsedDate - b.parsedDate;
 
+  const applyEventSectionRules = (rows)=>{
+    let out = rows.filter((r)=>r.source !== 'PR' && r.source !== 'SM');
+    out = consolidateReportRows(out);
+    out = consolidateEventRows(out);
+    out = consolidateDisplayRows(out);
+    return out.sort(sortByDate);
+  };
+
   if (useRolling) {
     startDate = new Date(centerDate);
     startDate.setDate(startDate.getDate() - 30);
@@ -944,6 +1384,8 @@ async function generatePdfReport(){
     const rangeMidnightEnd = new Date(endDate);
     rangeMidnightEnd.setHours(0,0,0,0);
 
+    upcomingRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, centerDate, rangeMidnightEnd)));
+    pastRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))));
     upcomingRows = validRows.filter((r)=>inRange(r.parsedDate, centerDate, rangeMidnightEnd)).sort(sortByDate);
     pastRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))).sort(sortByDate);
 
@@ -959,6 +1401,7 @@ async function generatePdfReport(){
     endDate = new Date(to);
     startDate.setHours(0,0,0,0);
     endDate.setHours(23,59,59,999);
+    customRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)));
     customRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)).sort(sortByDate);
     if (el.reportDetails.value === 'full') customRows = consolidateReportRows(customRows).sort(sortByDate);
   }
@@ -1002,10 +1445,29 @@ async function generatePdfReport(){
       writeWrapped(line, 18, 172);
       if (el.reportDetails.value === 'full') {
         writeWrapped(`Owner:${r.owner} Client Contact:${r.contact} Category:${r.category} Project:${r.project}`, 22, 168);
+        if (r.source === 'PR') {
+          writeWrapped(`Content Deadline:${formatDateMMDDYY(r.contentDeadline)} Proposal Deadline:${formatDateMMDDYY(r.proposalDeadline)} Result:${r.result || '-'}`, 22, 168);
+        }
+        if (r.source === 'SM') {
+          writeWrapped(`Post Link:${r.link || '-'} Media Type:${r.category || '-'}`, 22, 168);
+        }
         writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
       }
     });
     y += 2;
+  };
+
+  const renderSpecialSections = (rowsInWindow, rangeText)=>{
+    const socialRows = rowsInWindow.filter((r)=>r.source === 'SM');
+    const proposalRows = rowsInWindow.filter((r)=>r.source === 'PR');
+
+    if (socialRows.length) {
+      renderSection('Social Media Posts', rangeText, socialRows.sort(sortByDate));
+    }
+
+    if (proposalRows.length) {
+      renderSection('RFP / RFQ Deadlines', rangeText, proposalRows.sort(sortByDate));
+    }
   };
 
   const renderGoalChecksSection = ()=>{
@@ -1236,6 +1698,78 @@ async function generatePdfReport(){
   }
 
   y = Math.max(y + 4, chartBottomY + 4);
+
+  const renderNotesTextBlock = (title, text)=>{
+    const notesText = String(text || '').trim();
+    if (!notesText) return;
+    ensurePage(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(title, 18, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    notesText.split(/\r?\n/).forEach((line)=>{
+      writeWrapped(line || ' ', 18, 178);
+    });
+    y += 3;
+  };
+
+  const getImageFormat = (dataUrl)=>{
+    if (typeof dataUrl !== 'string') return 'PNG';
+    if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) return 'JPEG';
+    if (dataUrl.startsWith('data:image/webp')) return 'WEBP';
+    return 'PNG';
+  };
+
+  const getImageSize = (dataUrl)=>new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve({ width: img.width || 1, height: img.height || 1 });
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+
+  const renderNotesImageBlock = async (title, images, itemLabel)=>{
+    if (!images.length) return;
+    if (title) {
+      ensurePage(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(title, 18, y);
+      y += 5;
+    }
+
+    for (let i = 0; i < images.length; i += 1) {
+      const image = images[i];
+      try {
+        const dims = await getImageSize(image.dataUrl);
+        const maxW = 170;
+        const w = Math.min(maxW, dims.width);
+        const h = Math.max(12, w * (dims.height / Math.max(dims.width, 1)));
+        ensurePage(h + 10);
+        doc.addImage(image.dataUrl, getImageFormat(image.dataUrl), 18, y, w, h);
+        y += h + 4;
+        doc.setTextColor(30, 30, 30);
+      } catch (_err) {
+        writeWrapped(`${i + 1}. Unable to render ${itemLabel}: ${image.name || 'Unknown file'}`, 18, 178);
+      }
+    }
+    y += 2;
+  };
+
+  renderNotesTextBlock('Report Notes', el.reportNotes?.value || '');
+  await renderNotesImageBlock('Report Note Images', state.reportNotesImages, 'note image');
+  renderNotesTextBlock('Efforts', el.reportEfforts?.value || '');
+  await renderNotesImageBlock('', state.reportEffortsImages, 'efforts image');
+
+  if (useRolling) {
+    const upcomingRangeText = `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`;
+    const pastRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`;
+    const fullWindowRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`;
+
+    renderSection(
+      'Upcoming Events',
+      upcomingRangeText,
   if (useRolling) {
     renderSection(
       'Upcoming Events',
@@ -1245,6 +1779,22 @@ async function generatePdfReport(){
 
     renderSection(
       'Past Events',
+      pastRangeText,
+      pastRows
+    );
+
+    const rollingWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
+    renderSpecialSections(rollingWindowRows, fullWindowRangeText);
+  } else {
+    const customRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`;
+    renderSection(
+      'Custom Range Events',
+      customRangeText,
+      customRows
+    );
+
+    const customWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
+    renderSpecialSections(customWindowRows, customRangeText);
       `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`,
       pastRows
     );
@@ -1261,6 +1811,26 @@ async function generatePdfReport(){
   el.reportStatus.textContent = useRolling
     ? `Generated PDF: Upcoming (${upcomingRows.length}) | Past (${pastRows.length}).`
     : `Generated PDF: Custom Range (${customRows.length}).`;
+}
+
+
+function setTheme(theme){
+  const nextTheme = theme === THEMES.LIGHT ? THEMES.LIGHT : THEMES.DARK;
+  document.body.dataset.theme = nextTheme;
+  try { localStorage.setItem(THEME_STORAGE_KEY, nextTheme); } catch (_err) {}
+  if (el.themeToggle) {
+    const isLight = nextTheme === THEMES.LIGHT;
+    el.themeToggle.textContent = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+    el.themeToggle.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+  }
+}
+
+function getInitialTheme(){
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === THEMES.LIGHT || saved === THEMES.DARK) return saved;
+  } catch (_err) {}
+  return THEMES.DARK;
 }
 
 
@@ -1321,6 +1891,7 @@ function refreshAll(){
   }
   refreshFilters();
   renderCalendar();
+  renderProposals();
 }
 
 function init(){
@@ -1330,6 +1901,12 @@ function init(){
   el.calMonth.value = String(now.getMonth()); el.calYear.value = String(now.getFullYear()); el.newDate.value = iso(now.getFullYear(), now.getMonth(), now.getDate());
   el.reportCenter.value = iso(now.getFullYear(), now.getMonth(), now.getDate());
   updateReportModeUI();
+  setTheme(getInitialTheme());
+
+  el.themeToggle?.addEventListener('click', ()=>{
+    const currentTheme = document.body.dataset.theme === THEMES.LIGHT ? THEMES.LIGHT : THEMES.DARK;
+    setTheme(currentTheme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT);
+  });
 
   el.nav.forEach((btn)=>btn.addEventListener('click', ()=>{ el.nav.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); switchView(btn.dataset.view); refreshAll(); }));
   el.tabBd.addEventListener('click', ()=>{ state.activeBdTab='calendar'; state.selectedId=null; refreshAll(); });
@@ -1339,6 +1916,23 @@ function init(){
   [el.status,el.owner,el.category,el.search,el.calMonth,el.calYear].forEach((c)=>c.addEventListener('input', renderCalendar));
   el.prevMonth.addEventListener('click', ()=>moveMonth(-1)); el.nextMonth.addEventListener('click', ()=>moveMonth(1));
   el.saveEvent.addEventListener('click', saveNewBdEvent);
+  el.proposalsView?.addEventListener('click', (e)=>{
+    const card = e.target.closest('.proposal-card');
+    if (!card) return;
+    if (card.dataset.phase !== 'Complete') {
+      state.selectedProposalId = null;
+      renderProposals();
+      return;
+    }
+    state.selectedProposalId = card.dataset.id;
+    renderProposals();
+  });
+  el.proposalCompleteSearch?.addEventListener('input', ()=>renderProposals());
+  el.proposalCloseDetails?.addEventListener('click', ()=>{
+    state.selectedProposalId = null;
+    renderProposals();
+  });
+
   el.monthlyGrid.addEventListener('click', (e)=>{
     const bucketBtn = e.target.closest('.events-bucket-btn');
     if (bucketBtn) { state.eventsBucket = bucketBtn.dataset.bucket; renderCalendar(); return; }
@@ -1385,6 +1979,7 @@ function init(){
   el.g2FileInput.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if (f) loadFile(f,'g2'); });
   el.goalsFileInput.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if (f) loadFile(f,'goals'); });
   el.socialFileInput.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if (f) loadFile(f,'social'); });
+  el.proposalFileInput.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if (f) loadFile(f,'proposal'); });
 
   const openSheetView = (sheetName)=>{
     switchView('business-development');
@@ -1413,6 +2008,47 @@ function init(){
     fr.onload = (ev)=>{ state.reportLogoDataUrl = String(ev.target?.result || ''); };
     fr.readAsDataURL(f);
   });
+  const readImageFiles = async (files)=>{
+    const toDataUrl = (file)=>new Promise((resolve, reject)=>{
+      const fr = new FileReader();
+      fr.onload = ()=>resolve({ name: file.name, dataUrl: String(fr.result || '') });
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+    const loaded = await Promise.all(files.map(toDataUrl));
+    return loaded.filter((item)=>item.dataUrl);
+  };
+
+  el.reportNotesImages?.addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      state.reportNotesImages = [];
+      if (el.reportNotesImagesStatus) el.reportNotesImagesStatus.textContent = 'No note images selected.';
+      return;
+    }
+    state.reportNotesImages = await readImageFiles(files);
+    if (el.reportNotesImagesStatus) {
+      el.reportNotesImagesStatus.textContent = state.reportNotesImages.length
+        ? `${state.reportNotesImages.length} note image(s) ready for export.`
+        : 'No note images selected.';
+    }
+  });
+
+  el.reportEffortsImages?.addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      state.reportEffortsImages = [];
+      if (el.reportEffortsImagesStatus) el.reportEffortsImagesStatus.textContent = 'No efforts images selected.';
+      return;
+    }
+    state.reportEffortsImages = await readImageFiles(files);
+    if (el.reportEffortsImagesStatus) {
+      el.reportEffortsImagesStatus.textContent = state.reportEffortsImages.length
+        ? `${state.reportEffortsImages.length} efforts image(s) ready for export.`
+        : 'No efforts images selected.';
+    }
+  });
+
   el.generateReport.addEventListener('click', generatePdfReport);
 
   switchView('business-development');

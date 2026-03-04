@@ -12,10 +12,12 @@
         <div class="brand">
           <p class="eyebrow">Operations</p>
           <h1>Command Center</h1>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light and dark mode">🌙 Dark mode</button>
         </div>
 
         <nav class="nav-links" aria-label="Primary navigation">
           <button type="button" class="active" data-view="business-development">Business Development</button>
+          <button type="button" data-view="proposals">Proposals</button>
           <button type="button" data-view="reports">Reports</button>
         </nav>
 
@@ -54,6 +56,8 @@
           <label class="file-input file-upload-row"><span>Load Events workbook file</span><input id="events-workbook-input" type="file" accept=".xlsx,.xls" /></label>
           <label class="file-input file-upload-row"><span>Load Goal Checks workbook file</span><input id="goals-workbook-input" type="file" accept=".xlsx,.xls" /></label>
           <label class="file-input file-upload-row"><span>Load Social Calendar workbook file</span><input id="social-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <label class="file-input file-upload-row"><span>Upload Proposal Spreadsheet</span><input id="proposal-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <p class="hint" id="workbook-status">SharePoint links are auto-tried as direct-download variants (with proxy fallbacks). If blocked by auth/CORS, open the file once in this browser (sign in) and retry, or upload file. Events source reads sheet "2026" and headings from row 4. Goal Checks source reads sheet "2026 Progress bars". Social Calendar source reads Date + Subject fields. Proposal source reads columns A-H (Content Deadline through Phase).</p>
           <p class="hint" id="workbook-status">SharePoint links are auto-tried as direct-download variants (with proxy fallbacks). If blocked by auth/CORS, open the file once in this browser (sign in) and retry, or upload file. Events source reads sheet "2026" and headings from row 4. Goal Checks source reads sheet "2026 Progress bars". Social Calendar source reads Date + Subject fields.</p>
         </details>
 
@@ -121,10 +125,41 @@
           </section>
         </section>
 
+
+        <section id="proposals-view" hidden>
+          <header class="main-header"><div><p class="eyebrow">Marketing</p><h2>Proposal Pipeline</h2></div></header>
+          <section class="proposal-layout" id="proposal-layout">
+            <article class="feed-column proposal-column" data-phase="Team Development">
+              <header><h3>Team Development</h3><span id="proposal-count-team">0</span></header>
+              <div id="proposal-team-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column proposal-column" data-phase="Content Development">
+              <header><h3>Content Development</h3><span id="proposal-count-content">0</span></header>
+              <div id="proposal-content-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column proposal-column" data-phase="Complete">
+              <header><h3>Complete</h3><span id="proposal-count-complete">0</span></header>
+              <label class="proposal-search-label">Search<input id="proposal-complete-search" type="search" placeholder="Task, account, project..." /></label>
+              <div id="proposal-complete-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column detail-panel proposal-detail-panel" id="proposal-detail-panel" hidden>
+              <header><h3>Proposal Details</h3><div class="detail-header-actions"><button id="proposal-close-details" type="button" class="subtab">Close</button><span id="proposal-selected-id">None</span></div></header>
+              <div id="proposal-detail-content" class="proposal-detail-content"><p class="hint">Select a completed proposal to view details.</p></div>
+            </article>
+          </section>
+        </section>
+
         <section id="reports-view" hidden>
           <header class="main-header"><div><p class="eyebrow">Reports</p><h2>Export Efforts / Events</h2></div></header>
           <article class="feed-column">
             <div class="mini-form two-col">
+              <fieldset class="report-dataset-group">
+                <legend>Datasets</legend>
+                <label class="report-check"><input id="report-ds-bd" type="checkbox" checked /> BD Calendar</label>
+                <label class="report-check"><input id="report-ds-events" type="checkbox" checked /> Events 2026</label>
+                <label class="report-check"><input id="report-ds-social" type="checkbox" /> Social Media Calendar</label>
+                <label class="report-check"><input id="report-ds-proposals" type="checkbox" /> Proposal Pipeline</label>
+              </fieldset>
               <label>Dataset
                 <select id="report-dataset"><option value="bd">BD Calendar</option><option value="g2">Events 2026</option><option value="both">Both</option></select>
               </label>
@@ -144,6 +179,20 @@
               <label>From Date<input id="report-from" type="date" /></label>
               <label>To Date<input id="report-to" type="date" /></label>
             </div>
+            <label>Report Notes
+              <textarea id="report-notes" rows="4" placeholder="Add notes for this export (appears below the G2 Sheet Table section)..."></textarea>
+            </label>
+            <label>Report Note Images (optional)
+              <input id="report-notes-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-notes-images-status">No note images selected.</p>
+            <label>Efforts
+              <textarea id="report-efforts" rows="4" placeholder="Add efforts notes for this export..."></textarea>
+            </label>
+            <label>Efforts Images (optional)
+              <input id="report-efforts-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-efforts-images-status">No efforts images selected.</p>
             <label>Report Header Logo Image (optional override)<input id="report-logo-input" type="file" accept=".png,.jpg,.jpeg,.webp" /></label>
             <button id="generate-report" type="button">Generate PDF</button>
             <p class="hint" id="report-status">Choose Rolling 60 Day or Custom Date Range, then export.</p>
