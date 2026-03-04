@@ -1263,6 +1263,13 @@ async function generatePdfReport(){
 
   const sortByDate = (a,b)=>a.parsedDate - b.parsedDate;
 
+  const applyEventSectionRules = (rows)=>{
+    let out = rows.filter((r)=>r.source !== 'PR' && r.source !== 'SM');
+    if (el.reportDetails.value === 'full') out = consolidateReportRows(out);
+    out = consolidateEventRows(out);
+    return out.sort(sortByDate);
+  };
+
   if (useRolling) {
     startDate = new Date(centerDate);
     startDate.setDate(startDate.getDate() - 30);
@@ -1274,16 +1281,8 @@ async function generatePdfReport(){
     const rangeMidnightEnd = new Date(endDate);
     rangeMidnightEnd.setHours(0,0,0,0);
 
-    upcomingRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, centerDate, rangeMidnightEnd)).sort(sortByDate);
-    pastRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))).sort(sortByDate);
-
-    if (el.reportDetails.value === 'full') {
-      upcomingRows = consolidateReportRows(upcomingRows).sort(sortByDate);
-      pastRows = consolidateReportRows(pastRows).sort(sortByDate);
-    }
-
-    upcomingRows = consolidateEventRows(upcomingRows).sort(sortByDate);
-    pastRows = consolidateEventRows(pastRows).sort(sortByDate);
+    upcomingRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, centerDate, rangeMidnightEnd)));
+    pastRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))));
   } else {
     const from = parseDate(el.reportFrom.value);
     const to = parseDate(el.reportTo.value);
@@ -1292,9 +1291,7 @@ async function generatePdfReport(){
     endDate = new Date(to);
     startDate.setHours(0,0,0,0);
     endDate.setHours(23,59,59,999);
-    customRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, startDate, endDate)).sort(sortByDate);
-    if (el.reportDetails.value === 'full') customRows = consolidateReportRows(customRows).sort(sortByDate);
-    customRows = consolidateEventRows(customRows).sort(sortByDate);
+    customRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)));
   }
 
   const jsPDFCtor = window.jspdf?.jsPDF;
