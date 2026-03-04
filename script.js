@@ -1269,7 +1269,7 @@ async function generatePdfReport(){
 
   const applyEventSectionRules = (rows)=>{
     let out = rows.filter((r)=>r.source !== 'PR' && r.source !== 'SM');
-    if (el.reportDetails.value === 'full') out = consolidateReportRows(out);
+    out = consolidateReportRows(out);
     out = consolidateEventRows(out);
     return out.sort(sortByDate);
   };
