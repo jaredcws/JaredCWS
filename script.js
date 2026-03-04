@@ -7,6 +7,7 @@ const state = {
   selectedId: null, selectedGroupIds: [], detailEditMode: false, activeView: "business-development", clientsExpanded: false, renderRows: [],
   g2Loaded: false, activeBdTab: "calendar", eventColumns: [], eventHeaderRow: null, eventsBucket: "upcoming",
   goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", reportNotesImages: [], reportEffortsImages: [], selectedProposalId: null
+  goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: ""
 };
 
 const seedBdRows = [
@@ -20,6 +21,12 @@ const el = {
   bdUrlInput: document.getElementById("bd-url-input"), g2UrlInput: document.getElementById("events-url-input"), goalsUrlInput: document.getElementById("goals-url-input"), socialUrlInput: document.getElementById("social-url-input"),
   loadBdUrl: document.getElementById("load-bd-url"), loadG2Url: document.getElementById("load-events-url"), loadGoalsUrl: document.getElementById("load-goals-url"), loadSocialUrl: document.getElementById("load-social-url"),
   bdFileInput: document.getElementById("workbook-input"), g2FileInput: document.getElementById("events-workbook-input"), goalsFileInput: document.getElementById("goals-workbook-input"), socialFileInput: document.getElementById("social-workbook-input"), proposalFileInput: document.getElementById("proposal-workbook-input"), workbookStatus: document.getElementById("workbook-status"),
+  nav: document.querySelectorAll(".nav-links button[data-view]"),
+  projectsView: document.getElementById("projects-view"), bdView: document.getElementById("bd-view"), reportsView: document.getElementById("reports-view"), sheetView: document.getElementById("sheet-view"),
+  sourcePanel: document.getElementById("source-panel"), addPanel: document.getElementById("bd-event-panel"), sheetsPanel: document.getElementById("sheet-list-panel"),
+  bdUrlInput: document.getElementById("bd-url-input"), g2UrlInput: document.getElementById("events-url-input"), goalsUrlInput: document.getElementById("goals-url-input"), socialUrlInput: document.getElementById("social-url-input"),
+  loadBdUrl: document.getElementById("load-bd-url"), loadG2Url: document.getElementById("load-events-url"), loadGoalsUrl: document.getElementById("load-goals-url"), loadSocialUrl: document.getElementById("load-social-url"),
+  bdFileInput: document.getElementById("workbook-input"), g2FileInput: document.getElementById("events-workbook-input"), goalsFileInput: document.getElementById("goals-workbook-input"), socialFileInput: document.getElementById("social-workbook-input"), workbookStatus: document.getElementById("workbook-status"),
   tabBd: document.getElementById("bd-tab-calendar"), tabEvents: document.getElementById("bd-tab-events"), monthControls: document.getElementById("month-controls"), bdTitle: document.getElementById("bd-title"), calendarHeading: document.getElementById("calendar-heading"),
   prevMonth: document.getElementById("prev-month"), nextMonth: document.getElementById("next-month"), calMonth: document.getElementById("calendar-month"), calYear: document.getElementById("calendar-year"),
   statusLabel: document.getElementById("status-label"), ownerLabel: document.getElementById("owner-label"), categoryLabel: document.getElementById("category-label"), searchLabel: document.getElementById("search-label"),
@@ -30,6 +37,7 @@ const el = {
   sheetCalendar: document.getElementById("sheet-calendar"), sheetG2: document.getElementById("sheet-g2"), toggleClients: document.getElementById("toggle-clients"), clientSheetList: document.getElementById("client-sheet-list"),
   sheetTitle: document.getElementById("sheet-title"), sheetTable: document.getElementById("sheet-table"),
   reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportNotesImages: document.getElementById("report-notes-images"), reportNotesImagesStatus: document.getElementById("report-notes-images-status"), reportEfforts: document.getElementById("report-efforts"), reportEffortsImages: document.getElementById("report-efforts-images"), reportEffortsImagesStatus: document.getElementById("report-efforts-images-status"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalContentList: document.getElementById("proposal-content-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
+  reportDataset: document.getElementById("report-dataset"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status")
 };
 
 const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -748,6 +756,7 @@ function consolidateRows(rows){
   const map = new Map();
   for (const row of rows) {
     const key = row._social ? `${row.Date}|social|${(row.Task||"").toLowerCase().trim()}` : (row._proposal ? `${row.Date}|proposal|${row._proposalId || row.id}|${row.Action || ""}` : `${row.Date}|${(row.Client || "").toLowerCase().trim()}`);
+    const key = row._social ? `${row.Date}|social|${(row.Task||"").toLowerCase().trim()}` : `${row.Date}|${(row.Client || "").toLowerCase().trim()}`;
     if (!map.has(key)) {
       map.set(key, { ...row, _sourceIds: [row.id], _owners: new Set([row.Owner].filter(Boolean)), _contacts: new Set([row["Client Contact"]].filter(Boolean)) });
       continue;
@@ -843,6 +852,7 @@ function renderCalendar(){
       const taskVal = r.Task || "Untitled";
       const metaVal = `${r.Client || "-"} · ${r.Status || "-"}`;
       return `<button class="list-entry event-chip ${r._social ? "social-chip" : ""} ${r._proposal ? "proposal-chip" : ""}" type="button" data-id="${r.id}"><span class="list-date">${dateVal}</span><span class="list-task">${taskVal}</span><span class="list-meta">${metaVal}</span></button>`;
+      return `<button class="list-entry event-chip ${r._social ? "social-chip" : ""}" type="button" data-id="${r.id}"><span class="list-date">${dateVal}</span><span class="list-task">${taskVal}</span><span class="list-meta">${metaVal}</span></button>`;
     }).join('');
     renderDetailPanel();
     return;
@@ -867,6 +877,7 @@ function renderCalendar(){
       const inMonth = date.getMonth()===month;
       const entries = byDate[key] || [];
       html += `<div class="calendar-cell ${inMonth?'':'empty'}" data-date="${key}"><div class="cell-day">${date.getDate()}</div>${entries.map(e=>`<button class="event-chip ${e._social ? "social-chip" : ""} ${e._proposal ? "proposal-chip" : ""}" type="button" data-id="${e.id}">${e.Task||'Untitled'}</button>`).join('')}</div>`;
+      html += `<div class="calendar-cell ${inMonth?'':'empty'}" data-date="${key}"><div class="cell-day">${date.getDate()}</div>${entries.map(e=>`<button class="event-chip ${e._social ? "social-chip" : ""}" type="button" data-id="${e.id}">${e.Task||'Untitled'}</button>`).join('')}</div>`;
     }
   }
   el.monthlyGrid.innerHTML = html;
@@ -1098,6 +1109,12 @@ function switchView(view){
   el.addPanel.hidden = view !== 'business-development';
   syncSheetsPanelVisibility();
   if (view === 'proposals') renderProposals();
+  el.reportsView.hidden = view !== 'reports';
+  el.sheetView.hidden = true;
+  const bdMode = view === 'business-development';
+  el.sourcePanel.hidden = !bdMode;
+  el.addPanel.hidden = !bdMode;
+  syncSheetsPanelVisibility();
 }
 
 function moveMonth(delta){
@@ -1121,6 +1138,7 @@ function consolidateReportRows(rows){
     const key = r.source === 'BD'
       ? `${r.source}|${dateKey}|${locationKey}`
       : (r.source === 'EV' ? `${r.source}|${dateKey}|${eventKey}` : `${r.source}|${dateKey}|${clientKey}`);
+    const key = r.source === 'BD' ? `${r.source}|${dateKey}|${locationKey}` : `${r.source}|${dateKey}|${clientKey}`;
 
     if (!grouped.has(key)) {
       grouped.set(key, {
@@ -1154,6 +1172,10 @@ function consolidateReportRows(rows){
     contact: Array.from(r.contactSet).join(', ') || '-',
     ownerSet: undefined,
     clientSet: undefined,
+    owner: Array.from(r.ownerSet).join(' | ') || '-',
+    notes: Array.from(r.notesSet).join(' | ') || '-',
+    contact: Array.from(r.contactSet).join(' | ') || '-',
+    ownerSet: undefined,
     notesSet: undefined,
     contactSet: undefined
   }));
@@ -1315,6 +1337,9 @@ async function generatePdfReport(){
   if (selectedDatasets.includes('social')) rows = rows.concat(state.socialRows.map(mapSocial));
   if (selectedDatasets.includes('proposals')) rows = rows.concat(state.proposalRows.map(mapProposals));
   if (selectedDatasets.includes('g2')) rows = rows.concat(state.g2Rows.map(mapEvents));
+  let rows = [];
+  if (el.reportDataset.value === 'bd' || el.reportDataset.value === 'both') rows = rows.concat(state.bdRows.map(mapBd));
+  if (el.reportDataset.value === 'g2' || el.reportDataset.value === 'both') rows = rows.concat(state.g2Rows.map(mapEvents));
 
   const validRows = rows
     .filter((r)=>r.parsedDate)
@@ -1361,6 +1386,13 @@ async function generatePdfReport(){
 
     upcomingRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, centerDate, rangeMidnightEnd)));
     pastRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))));
+    upcomingRows = validRows.filter((r)=>inRange(r.parsedDate, centerDate, rangeMidnightEnd)).sort(sortByDate);
+    pastRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))).sort(sortByDate);
+
+    if (el.reportDetails.value === 'full') {
+      upcomingRows = consolidateReportRows(upcomingRows).sort(sortByDate);
+      pastRows = consolidateReportRows(pastRows).sort(sortByDate);
+    }
   } else {
     const from = parseDate(el.reportFrom.value);
     const to = parseDate(el.reportTo.value);
@@ -1370,6 +1402,8 @@ async function generatePdfReport(){
     startDate.setHours(0,0,0,0);
     endDate.setHours(23,59,59,999);
     customRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)));
+    customRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)).sort(sortByDate);
+    if (el.reportDetails.value === 'full') customRows = consolidateReportRows(customRows).sort(sortByDate);
   }
 
   const jsPDFCtor = window.jspdf?.jsPDF;
@@ -1736,6 +1770,10 @@ async function generatePdfReport(){
     renderSection(
       'Upcoming Events',
       upcomingRangeText,
+  if (useRolling) {
+    renderSection(
+      'Upcoming Events',
+      `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`,
       upcomingRows
     );
 
@@ -1757,6 +1795,15 @@ async function generatePdfReport(){
 
     const customWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
     renderSpecialSections(customWindowRows, customRangeText);
+      `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`,
+      pastRows
+    );
+  } else {
+    renderSection(
+      'Custom Range Events',
+      `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`,
+      customRows
+    );
   }
 
 
@@ -1860,6 +1907,7 @@ function init(){
     const currentTheme = document.body.dataset.theme === THEMES.LIGHT ? THEMES.LIGHT : THEMES.DARK;
     setTheme(currentTheme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT);
   });
+
   el.nav.forEach((btn)=>btn.addEventListener('click', ()=>{ el.nav.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); switchView(btn.dataset.view); refreshAll(); }));
   el.tabBd.addEventListener('click', ()=>{ state.activeBdTab='calendar'; state.selectedId=null; refreshAll(); });
   el.tabEvents.addEventListener('click', ()=>{ state.activeBdTab='events'; state.eventsBucket='upcoming'; state.selectedId=null; refreshAll(); });

@@ -58,6 +58,7 @@
           <label class="file-input file-upload-row"><span>Load Social Calendar workbook file</span><input id="social-workbook-input" type="file" accept=".xlsx,.xls" /></label>
           <label class="file-input file-upload-row"><span>Upload Proposal Spreadsheet</span><input id="proposal-workbook-input" type="file" accept=".xlsx,.xls" /></label>
           <p class="hint" id="workbook-status">SharePoint links are auto-tried as direct-download variants (with proxy fallbacks). If blocked by auth/CORS, open the file once in this browser (sign in) and retry, or upload file. Events source reads sheet "2026" and headings from row 4. Goal Checks source reads sheet "2026 Progress bars". Social Calendar source reads Date + Subject fields. Proposal source reads columns A-H (Content Deadline through Phase).</p>
+          <p class="hint" id="workbook-status">SharePoint links are auto-tried as direct-download variants (with proxy fallbacks). If blocked by auth/CORS, open the file once in this browser (sign in) and retry, or upload file. Events source reads sheet "2026" and headings from row 4. Goal Checks source reads sheet "2026 Progress bars". Social Calendar source reads Date + Subject fields.</p>
         </details>
 
         <details class="sidebar-summary collapsible" id="sheet-list-panel">
@@ -159,6 +160,9 @@
                 <label class="report-check"><input id="report-ds-social" type="checkbox" /> Social Media Calendar</label>
                 <label class="report-check"><input id="report-ds-proposals" type="checkbox" /> Proposal Pipeline</label>
               </fieldset>
+              <label>Dataset
+                <select id="report-dataset"><option value="bd">BD Calendar</option><option value="g2">Events 2026</option><option value="both">Both</option></select>
+              </label>
               <label>Include Details<select id="report-details"><option value="summary">Summary</option><option value="full">Full</option></select></label>
             </div>
             <div class="report-mode-row">
