@@ -1335,6 +1335,19 @@ async function generatePdfReport(){
     y += 2;
   };
 
+  const renderSpecialSections = (rowsInWindow, rangeText)=>{
+    const socialRows = rowsInWindow.filter((r)=>r.source === 'SM');
+    const proposalRows = rowsInWindow.filter((r)=>r.source === 'PR');
+
+    if (socialRows.length) {
+      renderSection('Social Media Posts', rangeText, socialRows.sort(sortByDate));
+    }
+
+    if (proposalRows.length) {
+      renderSection('RFP / RFQ Deadlines', rangeText, proposalRows.sort(sortByDate));
+    }
+  };
+
   const renderGoalChecksSection = ()=>{
     if (!el.reportIncludeGoals.checked) return;
     ensurePage(14);
@@ -1564,23 +1577,34 @@ async function generatePdfReport(){
 
   y = Math.max(y + 4, chartBottomY + 4);
   if (useRolling) {
+    const upcomingRangeText = `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`;
+    const pastRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`;
+    const fullWindowRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`;
+
     renderSection(
       'Upcoming Events',
-      `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`,
+      upcomingRangeText,
       upcomingRows
     );
 
     renderSection(
       'Past Events',
-      `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(new Date(centerDate.getTime()-86400000))}`,
+      pastRangeText,
       pastRows
     );
+
+    const rollingWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
+    renderSpecialSections(rollingWindowRows, fullWindowRangeText);
   } else {
+    const customRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`;
     renderSection(
       'Custom Range Events',
-      `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`,
+      customRangeText,
       customRows
     );
+
+    const customWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
+    renderSpecialSections(customWindowRows, customRangeText);
   }
 
 
