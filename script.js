@@ -1274,8 +1274,8 @@ async function generatePdfReport(){
     const rangeMidnightEnd = new Date(endDate);
     rangeMidnightEnd.setHours(0,0,0,0);
 
-    upcomingRows = validRows.filter((r)=>r.source !== 'PR' && inRange(r.parsedDate, centerDate, rangeMidnightEnd)).sort(sortByDate);
-    pastRows = validRows.filter((r)=>r.source !== 'PR' && inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))).sort(sortByDate);
+    upcomingRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, centerDate, rangeMidnightEnd)).sort(sortByDate);
+    pastRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, startDate, new Date(centerDate.getTime()-86400000))).sort(sortByDate);
 
     if (el.reportDetails.value === 'full') {
       upcomingRows = consolidateReportRows(upcomingRows).sort(sortByDate);
@@ -1292,7 +1292,7 @@ async function generatePdfReport(){
     endDate = new Date(to);
     startDate.setHours(0,0,0,0);
     endDate.setHours(23,59,59,999);
-    customRows = validRows.filter((r)=>r.source !== 'PR' && inRange(r.parsedDate, startDate, endDate)).sort(sortByDate);
+    customRows = validRows.filter((r)=>r.source !== 'PR' && r.source !== 'SM' && inRange(r.parsedDate, startDate, endDate)).sort(sortByDate);
     if (el.reportDetails.value === 'full') customRows = consolidateReportRows(customRows).sort(sortByDate);
     customRows = consolidateEventRows(customRows).sort(sortByDate);
   }
