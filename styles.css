@@ -88,8 +88,6 @@ body[data-theme="light"] {
 }
 
 
-}
-
 * {
   box-sizing: border-box;
 }
@@ -98,7 +96,6 @@ body {
   margin: 0;
   font-family: "SF Pro Text", "-apple-system", sans-serif;
   background: radial-gradient(circle at top right, var(--page-glow) 0%, var(--bg) 40%);
-  background: radial-gradient(circle at top right, #152033 0%, var(--bg) 40%);
   color: var(--text);
 }
 
@@ -170,13 +167,11 @@ body {
 .nav-links button.active,
 .sheet-link:hover {
   background: var(--surface-hover);
-  background: #202938;
   border-color: var(--border);
 }
 
 .sidebar-summary {
   background: var(--card-2);
-  background: #1a2230;
   border: 1px solid var(--border);
   border-radius: 0.85rem;
   padding: 0.8rem;
@@ -256,8 +251,6 @@ label {
 .sidebar-summary input {
   background: var(--input-bg);
   border: 1px solid var(--input-border);
-  background: #141c29;
-  border: 1px solid #2c3950;
   color: var(--text);
   border-radius: 0.5rem;
   padding: 0.45rem;
@@ -295,7 +288,6 @@ label {
 button {
   background: linear-gradient(135deg, #2f81f7, var(--accent));
   color: var(--button-text);
-  color: #08111f;
   border: none;
   border-radius: 0.6rem;
   padding: 0.58rem 0.86rem;
@@ -373,14 +365,6 @@ button.subtab {
 button.subtab.active {
   background: var(--subtab-active-bg);
   border-color: var(--subtab-active-border);
-  background: #1b2534;
-  color: var(--text);
-  border: 1px solid #31415a;
-}
-
-button.subtab.active {
-  background: #22324a;
-  border-color: #4d73a5;
 }
 
 .feed-grid,
@@ -437,7 +421,6 @@ button.subtab.active {
 
 .feed-column span {
   background: var(--surface-hover);
-  background: #202938;
   border: 1px solid var(--border);
   color: var(--accent);
   border-radius: 999px;
@@ -454,8 +437,6 @@ button.subtab.active {
 .feed-column li {
   background: var(--card-item-bg);
   border: 1px solid var(--card-item-border);
-  background: #151b25;
-  border: 1px solid #273144;
   border-radius: 0.65rem;
   padding: 0.55rem;
   margin-bottom: 0.55rem;
@@ -486,8 +467,6 @@ button.subtab.active {
   border-radius: 0.65rem;
   background: var(--floating-bg);
   border: 1px solid var(--floating-border);
-  background: rgba(12, 20, 35, 0.92);
-  border: 1px solid #2b3a52;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
@@ -497,7 +476,6 @@ button.subtab.active {
   gap: 0.35rem;
   font-size: 0.79rem;
   color: var(--floating-text);
-  color: #dce6f8;
   white-space: nowrap;
 }
 
@@ -505,7 +483,6 @@ button.subtab.active {
   width: 0.86rem;
   height: 0.86rem;
   accent-color: var(--floating-text);
-  accent-color: #dce6f8;
 }
 
 .source-toggle-check input:disabled {
@@ -531,8 +508,6 @@ button.subtab.active {
   min-height: 95px;
   background: var(--calendar-cell-bg);
   border: 1px solid var(--calendar-cell-border);
-  background: #151f30;
-  border: 1px solid #2d3a50;
   border-radius: 0.5rem;
   padding: 0.4rem;
   display: flex;
@@ -556,9 +531,6 @@ button.subtab.active {
   border: 1px solid var(--event-chip-border);
   background: var(--event-chip-bg);
   color: var(--event-chip-text);
-  border: 1px solid #3b5f8f;
-  background: #1a2f4a;
-  color: #e8f0ff;
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
   font-size: 0.72rem;
@@ -590,8 +562,6 @@ button.subtab.active {
   border-radius: 0.65rem;
   border: 1px solid var(--list-entry-border);
   background: var(--list-entry-bg);
-  border: 1px solid #2f4e79;
-  background: #14263c;
   color: var(--text);
   padding: 0.55rem 0.65rem;
 }
@@ -614,7 +584,6 @@ button.subtab.active {
   margin-top: 0.18rem;
   font-size: 0.74rem;
   color: var(--list-meta);
-  color: #b8c4d8;
 }
 
 .list-empty {
@@ -640,7 +609,6 @@ button.subtab.active {
 
 .pill-grid div {
   background: var(--detail-chip-bg);
-  background: #182336;
   border-radius: 0.45rem;
   padding: 0.45rem 0.5rem;
   font-size: 0.78rem;
@@ -675,8 +643,6 @@ button.subtab.active {
   margin-top: 0.38rem;
   background: var(--detail-input-bg);
   border: 1px solid var(--detail-input-border);
-  background: #111a28;
-  border: 1px solid #32445f;
   color: var(--text);
   border-radius: 0.35rem;
   padding: 0.35rem 0.35rem 0.35rem 0.5rem;
@@ -696,7 +662,6 @@ table {
 th,
 td {
   border: 1px solid var(--table-border);
-  border: 1px solid #2b374c;
   padding: 0.4rem;
   text-align: left;
 }
@@ -764,11 +729,6 @@ textarea {
   resize: vertical;
   min-height: 84px;
 }
-
-  border-top: 1px solid #2b374c;
-}
-
-
 
 .report-mode-row {
   display: flex;
@@ -857,9 +817,6 @@ textarea {
   background: var(--subtab-bg);
   color: var(--text);
   border: 1px solid var(--list-entry-border);
-  background: #1a2a40;
-  color: var(--text);
-  border: 1px solid #2f4e79;
   border-radius: 999px;
   padding: 0.4rem 0.75rem;
 }
@@ -873,14 +830,6 @@ textarea {
   border: 1px solid var(--table-border);
   border-radius: 0.65rem;
   background: var(--events-panel-bg);
-  background: #234165;
-  border-color: #4d73a5;
-}
-
-.events-section {
-  border: 1px solid #2b374c;
-  border-radius: 0.65rem;
-  background: #1a2434;
   padding: 0.55rem;
 }
 
@@ -893,9 +842,6 @@ textarea {
   border: 1px solid var(--table-border);
   border-radius: 0.55rem;
   background: var(--events-wrap-bg);
-  border: 1px solid #2b374c;
-  border-radius: 0.55rem;
-  background: #172131;
   overflow: visible;
 }
 
@@ -913,7 +859,6 @@ textarea {
 
 .events-table-wrap table th {
   background: var(--events-head-bg);
-  background: #1a2536;
 }
 
 
@@ -1286,14 +1231,3 @@ textarea {
   justify-self: end;
   text-align: left;
 }
-  background: #1f2f47;
-}
-
-.events-table-wrap .event-row.selected {
-  background: #253b5a;
-}
-
-.events-table-wrap a {
-  color: #66b4ff;
-}
-
