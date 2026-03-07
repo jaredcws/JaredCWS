@@ -1525,16 +1525,33 @@ async function generatePdfReport(){
 
     const rows = state.goalCheckRows.slice(0, 13);
     rows.forEach((r)=>{
-      const label = (r.goal || '').slice(0, 18) || '-';
+      const label = (r.goal || '').slice(0, 14) || '-';
       const pctText = formatGoalPercent(r.percent);
+      const pctNumRaw = parsePercentNumber(r.percent);
+      const pctNum = pctNumRaw === null ? null : (pctNumRaw <= 1 ? pctNumRaw * 100 : pctNumRaw);
+
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
-      const line = `${label}: ${pctText}`;
-      const lines = doc.splitTextToSize(line, chartWidth);
       setGoalPercentColor(r.percent);
-      lines.forEach((ln)=>{ doc.text(ln, chartX, cy + 2.4); cy += 3.8; });
+      doc.text(`${label}: ${pctText}`, chartX, cy + 2.4);
+
+      const barX = chartX + 48;
+      const barY = cy;
+      const barW = 24;
+      const barH = 3.2;
+      doc.setDrawColor(190, 190, 190);
+      doc.setLineWidth(0.1);
+      doc.rect(barX, barY, barW, barH);
+
+      if (pctNum !== null && pctNum !== 0) {
+        const fillW = Math.min(Math.abs(pctNum), 100) / 100 * barW;
+        if (pctNum > 0) doc.setFillColor(37, 128, 70);
+        else doc.setFillColor(196, 53, 53);
+        doc.rect(barX, barY, fillW, barH, 'F');
+      }
+
       doc.setTextColor(30, 30, 30);
-      cy += 1.2;
+      cy += 5;
     });
     return cy;
   })();
