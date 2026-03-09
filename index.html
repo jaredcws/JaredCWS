@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Command Center</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Operations</p>
+          <h1>Command Center</h1>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light and dark mode">🌙 Dark mode</button>
+        </div>
+
+        <nav class="nav-links" aria-label="Primary navigation">
+          <button type="button" class="active" data-view="business-development">Business Development</button>
+          <button type="button" data-view="proposals">Proposals</button>
+          <button type="button" data-view="reports">Reports</button>
+        </nav>
+
+        <details class="sidebar-summary collapsible" id="bd-event-panel">
+          <summary>Add New BD Event</summary>
+          <div class="mini-form two-col" id="bd-form-grid">
+            <label>Date<input id="new-date" type="date" /></label>
+            <label>Task<input id="new-task" /></label>
+            <label>Account / Notes<input id="new-account-notes" /></label>
+            <label>Category<input id="new-category" /></label>
+            <label>Owner<input id="new-owner" /></label>
+            <label>Client Contact<input id="new-client-contact" /></label>
+            <label>Location<input id="new-location" /></label>
+            <label>Client<input id="new-client" /></label>
+            <label>Sub-Client<input id="new-sub-client" /></label>
+            <label>Status<input id="new-status" /></label>
+            <label>Meeting Notes<textarea id="new-meeting-notes"></textarea></label>
+            <label>Action<input id="new-action" /></label>
+            <label>Sub Action<input id="new-sub-action" /></label>
+            <label>Project Name<input id="new-project-name" /></label>
+          </div>
+          <button id="save-event" type="button">Add Event</button>
+        </details>
+
+        <details class="sidebar-summary collapsible" id="source-panel">
+          <summary>Live Data Sources</summary>
+          <label class="file-input"><span>BD Workbook URL</span><input id="bd-url-input" type="url" placeholder="https://...xlsx" /></label>
+          <button id="load-bd-url" type="button">Load BD from URL</button>
+          <label class="file-input"><span>Events Workbook URL</span><input id="events-url-input" type="url" placeholder="https://...xlsx" /></label>
+          <button id="load-events-url" type="button">Load Events from URL</button>
+          <label class="file-input"><span>Marketing Goal Checks URL</span><input id="goals-url-input" type="url" placeholder="https://...xlsx" /></label>
+          <button id="load-goals-url" type="button">Load Goal Checks from URL</button>
+          <label class="file-input"><span>Social Media Calendar URL</span><input id="social-url-input" type="url" placeholder="https://...xlsx" /></label>
+          <button id="load-social-url" type="button">Load Social Calendar from URL</button>
+          <label class="file-input file-upload-row"><span>Load BD workbook file</span><input id="workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <label class="file-input file-upload-row"><span>Load Events workbook file</span><input id="events-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <label class="file-input file-upload-row"><span>Load Goal Checks workbook file</span><input id="goals-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <label class="file-input file-upload-row"><span>Load Social Calendar workbook file</span><input id="social-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <label class="file-input file-upload-row"><span>Upload Proposal Spreadsheet</span><input id="proposal-workbook-input" type="file" accept=".xlsx,.xls" /></label>
+          <p class="hint" id="workbook-status">SharePoint links are auto-tried as direct-download variants (with proxy fallbacks). If blocked by auth/CORS, open the file once in this browser (sign in) and retry, or upload file. Events source reads sheet "2026" and headings from row 4. Goal Checks source reads sheet "2026 Progress bars". Social Calendar source reads Date + Subject fields. Proposal source reads columns A-H (Content Deadline through Phase).</p>
+        </details>
+
+        <details class="sidebar-summary collapsible" id="sheet-list-panel">
+          <summary>Sheets</summary>
+          <button class="sheet-link" id="sheet-calendar" type="button">Calendar</button>
+          <button class="sheet-link" id="sheet-g2" type="button" hidden>G2 Contacts</button>
+          <button class="sheet-link" id="toggle-clients" type="button">Clients ▾</button>
+          <div id="client-sheet-list" hidden></div>
+        </details>
+      </aside>
+
+      <main class="main-window">
+        <section id="projects-view" hidden>
+          <header class="main-header">
+            <div><p class="eyebrow">Project Management</p><h2>Program Feed</h2></div>
+            <button type="button">+ New Project</button>
+          </header>
+          <section class="feed-grid" aria-label="Project feed">
+            <article class="feed-column"><header><h3>Backlogged</h3><span>4</span></header><ul><li><h4>Client Portal Revamp</h4><p>Awaiting scope sign-off and design assets.</p></li></ul></article>
+            <article class="feed-column"><header><h3>Ongoing</h3><span>7</span></header><ul><li><h4>Mobile App Modernization</h4><p>Sprint 5 is focused on API integration testing.</p></li></ul></article>
+            <article class="feed-column"><header><h3>Completed</h3><span>7</span></header><ul><li><h4>CRM Data Cleanup</h4><p>De-duplication and governance controls finalized.</p></li></ul></article>
+          </section>
+        </section>
+
+        <section id="bd-view">
+          <header class="main-header">
+            <div><p class="eyebrow">Business Development</p><h2 id="bd-title">BD Calendar</h2></div>
+            <div class="button-row">
+              <button id="bd-tab-calendar" class="subtab active" type="button">Calendar</button>
+              <button id="bd-tab-events" class="subtab" type="button">Events</button>
+              <div id="month-controls" class="button-row">
+                <button id="prev-month" class="subtab" type="button">←</button>
+                <label>Month <select id="calendar-month"></select></label>
+                <label>Year <input id="calendar-year" type="number" min="2020" max="2100" /></label>
+                <button id="next-month" class="subtab" type="button">→</button>
+              </div>
+            </div>
+          </header>
+
+          <section class="bd-controls">
+            <label><span id="status-label">Status</span><select id="status-filter"></select></label>
+            <label><span id="owner-label">Owner</span><select id="owner-filter"></select></label>
+            <label><span id="category-label">Category</span><select id="category-filter"></select></label>
+            <label><span id="search-label">Search</span><input type="text" id="search-filter" placeholder="Task, account, project..." /></label>
+          </section>
+
+
+          <section class="bd-layout" id="bd-layout">
+            <article class="feed-column monthly-card">
+              <header><h3 id="calendar-heading">Monthly Calendar View</h3><span id="visible-count">0</span></header>
+              <div id="calendar-weekdays" class="calendar-weekdays"></div>
+              <div id="monthly-calendar" class="monthly-grid"></div>
+            </article>
+
+            <article class="feed-column detail-panel" id="event-detail-panel" hidden>
+              <header><h3>Event Details</h3><div class="detail-header-actions"><button id="edit-selected" type="button" class="subtab">Edit</button><button id="close-details" type="button" class="subtab">Close</button><span id="selected-id">None</span></div></header>
+              <div id="selected-effort"></div>
+            </article>
+          </section>
+
+          <section class="calendar-sources" id="calendar-sources">
+            <label class="source-toggle-check"><input type="checkbox" id="toggle-source-bd" checked /> BD Calendar</label>
+            <label class="source-toggle-check"><input type="checkbox" id="toggle-source-social" checked /> Social Media Calendar</label>
+          </section>
+        </section>
+
+
+        <section id="proposals-view" hidden>
+          <header class="main-header"><div><p class="eyebrow">Marketing</p><h2>Proposal Pipeline</h2></div></header>
+          <section class="proposal-layout" id="proposal-layout">
+            <article class="feed-column proposal-column" data-phase="Team Development">
+              <header><h3>Team Development</h3><span id="proposal-count-team">0</span></header>
+              <div id="proposal-team-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column proposal-column" data-phase="Content Development">
+              <header><h3>Content Development</h3><span id="proposal-count-content">0</span></header>
+              <div id="proposal-content-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column proposal-column" data-phase="Complete">
+              <header><h3>Complete</h3><span id="proposal-count-complete">0</span></header>
+              <label class="proposal-search-label">Search<input id="proposal-complete-search" type="search" placeholder="Task, account, project..." /></label>
+              <div id="proposal-complete-list" class="proposal-list"></div>
+            </article>
+            <article class="feed-column detail-panel proposal-detail-panel" id="proposal-detail-panel" hidden>
+              <header><h3>Proposal Details</h3><div class="detail-header-actions"><button id="proposal-close-details" type="button" class="subtab">Close</button><span id="proposal-selected-id">None</span></div></header>
+              <div id="proposal-detail-content" class="proposal-detail-content"><p class="hint">Select a completed proposal to view details.</p></div>
+            </article>
+          </section>
+        </section>
+
+        <section id="reports-view" hidden>
+          <header class="main-header"><div><p class="eyebrow">Reports</p><h2>Export Efforts / Events</h2></div></header>
+          <article class="feed-column">
+            <div class="mini-form two-col">
+              <fieldset class="report-dataset-group">
+                <legend>Datasets</legend>
+                <label class="report-check"><input id="report-ds-bd" type="checkbox" checked /> BD Calendar</label>
+                <label class="report-check"><input id="report-ds-events" type="checkbox" checked /> Events 2026</label>
+                <label class="report-check"><input id="report-ds-social" type="checkbox" /> Social Media Calendar</label>
+                <label class="report-check"><input id="report-ds-proposals" type="checkbox" /> Proposal Pipeline</label>
+              </fieldset>
+              <fieldset class="report-details-group">
+                <legend>Include Details</legend>
+                <label class="report-check report-details-check"><input id="report-details-summary" type="checkbox" checked /> Summary</label>
+                <label class="report-check report-details-check"><input id="report-details-full" type="checkbox" /> Full</label>
+              </fieldset>
+            </div>
+            <div class="report-mode-row">
+              <label class="report-check"><input id="report-rolling" type="checkbox" checked /> Rolling 60 Day Report</label>
+              <label class="report-check"><input id="report-custom" type="checkbox" /> Custom Date Range</label>
+            </div>
+            <div class="report-mode-row">
+              <label class="report-check"><input id="report-include-goals" type="checkbox" /> Include 2026 Progress Bars (Goal Checks)</label>
+            </div>
+            <div class="report-date-row" id="report-center-row">
+              <label>Center Date<input id="report-center" type="date" /></label>
+            </div>
+            <div class="report-date-row" id="report-custom-row" hidden>
+              <label>From Date<input id="report-from" type="date" /></label>
+              <label>To Date<input id="report-to" type="date" /></label>
+            </div>
+            <label>Efforts
+              <textarea id="report-efforts" rows="4" placeholder="Add efforts notes for this export..."></textarea>
+            </label>
+            <label>Efforts Images (optional)
+              <input id="report-efforts-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-efforts-images-status">No efforts images selected.</p>
+            <label>Win &amp; Capture Rates
+              <textarea id="report-win-capture" rows="4" placeholder="Add Win &amp; Capture Rates notes for this export..."></textarea>
+            </label>
+            <label>Win &amp; Capture Rates Images (optional)
+              <input id="report-win-capture-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-win-capture-images-status">No Win &amp; Capture Rates images selected.</p>
+            <label>Rolling Chase Won
+              <textarea id="report-rolling-chase" rows="4" placeholder="Add Rolling Chase Won notes for this export..."></textarea>
+            </label>
+            <label>Rolling Chase Won Images (optional)
+              <input id="report-rolling-chase-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-rolling-chase-images-status">No Rolling Chase Won images selected.</p>
+            <label>Highlights
+              <textarea id="report-highlights" rows="4" placeholder="Add highlights notes for this export..."></textarea>
+            </label>
+            <label>Highlights Images (optional)
+              <input id="report-highlights-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-highlights-images-status">No highlights images selected.</p>
+            <label>Report Notes
+              <textarea id="report-notes" rows="4" placeholder="Add report notes for this export..."></textarea>
+            </label>
+            <label>Report Note Images (optional)
+              <input id="report-notes-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-notes-images-status">No note images selected.</p>
+            <label>Report Header Logo Image (optional override)<input id="report-logo-input" type="file" accept=".png,.jpg,.jpeg,.webp" /></label>
+            <button id="generate-report" type="button">Generate PDF</button>
+            <p class="hint" id="report-status">Choose Rolling 60 Day or Custom Date Range, then export.</p>
+          </article>
+        </section>
+
+        <section id="sheet-view" hidden>
+          <header class="main-header"><div><p class="eyebrow">Client Sheet</p><h2 id="sheet-title">Sheet</h2></div></header>
+          <article class="feed-column"><div id="sheet-table"></div></article>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
