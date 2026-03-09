@@ -730,6 +730,41 @@ textarea {
   min-height: 84px;
 }
 
+
+
+
+.report-dataset-group .report-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-content: start;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.report-dataset-group .report-check input {
+  margin: 0;
+  width: auto;
+}
+
+
+
+.report-details-group {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.report-details-group legend {
+  padding: 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .report-mode-row {
   display: flex;
   gap: 1rem;

@@ -159,6 +159,11 @@
                 <label class="report-check"><input id="report-ds-social" type="checkbox" /> Social Media Calendar</label>
                 <label class="report-check"><input id="report-ds-proposals" type="checkbox" /> Proposal Pipeline</label>
               </fieldset>
+              <fieldset class="report-details-group">
+                <legend>Include Details</legend>
+                <label class="report-check report-details-check"><input id="report-details-summary" type="checkbox" checked /> Summary</label>
+                <label class="report-check report-details-check"><input id="report-details-full" type="checkbox" /> Full</label>
+              </fieldset>
               <label>Include Details<select id="report-details"><option value="summary">Summary</option><option value="full">Full</option></select></label>
             </div>
             <div class="report-mode-row">
@@ -189,6 +194,34 @@
               <input id="report-efforts-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
             </label>
             <p class="hint" id="report-efforts-images-status">No efforts images selected.</p>
+            <label>Win &amp; Capture Rates
+              <textarea id="report-win-capture" rows="4" placeholder="Add Win &amp; Capture Rates notes for this export..."></textarea>
+            </label>
+            <label>Win &amp; Capture Rates Images (optional)
+              <input id="report-win-capture-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-win-capture-images-status">No Win &amp; Capture Rates images selected.</p>
+            <label>Rolling Chase Won
+              <textarea id="report-rolling-chase" rows="4" placeholder="Add Rolling Chase Won notes for this export..."></textarea>
+            </label>
+            <label>Rolling Chase Won Images (optional)
+              <input id="report-rolling-chase-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-rolling-chase-images-status">No Rolling Chase Won images selected.</p>
+            <label>Highlights
+              <textarea id="report-highlights" rows="4" placeholder="Add highlights notes for this export..."></textarea>
+            </label>
+            <label>Highlights Images (optional)
+              <input id="report-highlights-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-highlights-images-status">No highlights images selected.</p>
+            <label>Report Notes
+              <textarea id="report-notes" rows="4" placeholder="Add report notes for this export..."></textarea>
+            </label>
+            <label>Report Note Images (optional)
+              <input id="report-notes-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-notes-images-status">No note images selected.</p>
             <label>Report Header Logo Image (optional override)<input id="report-logo-input" type="file" accept=".png,.jpg,.jpeg,.webp" /></label>
             <button id="generate-report" type="button">Generate PDF</button>
             <p class="hint" id="report-status">Choose Rolling 60 Day or Custom Date Range, then export.</p>
