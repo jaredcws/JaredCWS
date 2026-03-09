@@ -164,6 +164,7 @@
                 <label class="report-check report-details-check"><input id="report-details-summary" type="checkbox" checked /> Summary</label>
                 <label class="report-check report-details-check"><input id="report-details-full" type="checkbox" /> Full</label>
               </fieldset>
+              <label>Include Details<select id="report-details"><option value="summary">Summary</option><option value="full">Full</option></select></label>
             </div>
             <div class="report-mode-row">
               <label class="report-check"><input id="report-rolling" type="checkbox" checked /> Rolling 60 Day Report</label>
@@ -179,6 +180,13 @@
               <label>From Date<input id="report-from" type="date" /></label>
               <label>To Date<input id="report-to" type="date" /></label>
             </div>
+            <label>Report Notes
+              <textarea id="report-notes" rows="4" placeholder="Add notes for this export (appears below the G2 Sheet Table section)..."></textarea>
+            </label>
+            <label>Report Note Images (optional)
+              <input id="report-notes-images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple />
+            </label>
+            <p class="hint" id="report-notes-images-status">No note images selected.</p>
             <label>Efforts
               <textarea id="report-efforts" rows="4" placeholder="Add efforts notes for this export..."></textarea>
             </label>
