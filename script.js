@@ -1446,6 +1446,13 @@ async function generatePdfReport(){
     }
   };
 
+  const setGoalPercentColor = (value)=>{
+    const n = parsePercentNumber(value);
+    if (n == null || n === 0) { doc.setTextColor(30, 30, 30); return; }
+    if (n > 0) { doc.setTextColor(37, 128, 70); return; }
+    doc.setTextColor(196, 53, 53);
+  };
+
   const renderGoalChecksSection = ()=>{
     if (!el.reportIncludeGoals.checked) return;
     ensurePage(14);
@@ -1461,6 +1468,9 @@ async function generatePdfReport(){
     }
 
     state.goalCheckRows.forEach((r, i)=>{
+      setGoalPercentColor(r.percent);
+      writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
+      doc.setTextColor(30, 30, 30);
       writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
     });
     y += 2;
@@ -1516,6 +1526,33 @@ async function generatePdfReport(){
 
     const rows = state.goalCheckRows.slice(0, 13);
     rows.forEach((r)=>{
+      const label = (r.goal || '').slice(0, 14) || '-';
+      const pctText = formatGoalPercent(r.percent);
+      const pctNumRaw = parsePercentNumber(r.percent);
+      const pctNum = pctNumRaw === null ? null : (pctNumRaw <= 1 ? pctNumRaw * 100 : pctNumRaw);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      setGoalPercentColor(r.percent);
+      doc.text(`${label}: ${pctText}`, chartX, cy + 2.4);
+
+      const barX = chartX + 48;
+      const barY = cy;
+      const barW = 24;
+      const barH = 3.2;
+      doc.setDrawColor(190, 190, 190);
+      doc.setLineWidth(0.1);
+      doc.rect(barX, barY, barW, barH);
+
+      if (pctNum !== null && pctNum !== 0) {
+        const fillW = Math.min(Math.abs(pctNum), 100) / 100 * barW;
+        if (pctNum > 0) doc.setFillColor(37, 128, 70);
+        else doc.setFillColor(196, 53, 53);
+        doc.rect(barX, barY, fillW, barH, 'F');
+      }
+
+      doc.setTextColor(30, 30, 30);
+      cy += 5;
       const label = (r.goal || '').slice(0, 18) || '-';
       const pctText = formatGoalPercent(r.percent);
       doc.setFont('helvetica', 'normal');
