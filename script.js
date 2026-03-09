@@ -1272,6 +1272,24 @@ async function generatePdfReport(){
     location: r.Location || '-'
   });
 
+  const mapSocial = (r)=>{
+    const postLink = String(r['Post Link'] || '').trim();
+    return {
+      source: 'SM',
+      rawDate: r.Date,
+      parsedDate: parseDate(r.Date),
+      task: r.Subject || r.Task || '-',
+      client: 'Social Media',
+      status: postLink ? 'Complete' : (r.Status || '-'),
+      owner: r.Owner || '-',
+      category: r['Media Type'] || r.Category || '-',
+      project: r['Project Name'] || '-',
+      notes: r.Caption || r['Account / Notes'] || '-',
+      contact: '-',
+      location: postLink || '-',
+      link: postLink || '-'
+    };
+  };
   const mapSocial = (r)=>({
     source: 'SM',
     rawDate: r.Date,
