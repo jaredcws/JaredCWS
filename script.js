@@ -1471,6 +1471,7 @@ async function generatePdfReport(){
       setGoalPercentColor(r.percent);
       writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
       doc.setTextColor(30, 30, 30);
+      writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
     });
     y += 2;
   };
@@ -1552,6 +1553,14 @@ async function generatePdfReport(){
 
       doc.setTextColor(30, 30, 30);
       cy += 5;
+      const label = (r.goal || '').slice(0, 18) || '-';
+      const pctText = formatGoalPercent(r.percent);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      const line = `${label}: ${pctText}`;
+      const lines = doc.splitTextToSize(line, chartWidth);
+      lines.forEach((ln)=>{ doc.text(ln, chartX, cy + 2.4); cy += 3.8; });
+      cy += 1.2;
     });
     return cy;
   })();
