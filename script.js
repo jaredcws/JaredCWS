@@ -1465,6 +1465,12 @@ async function generatePdfReport(){
     sectionRows.forEach((r, i)=>{
       const line = `${i+1}. [${r.source}] ${formatDateMMDDYY(r.rawDate)} | ${r.task} | ${r.client} | ${r.status}`;
       writeWrapped(line, 18, 172);
+
+      if (r.source === 'EV') {
+        writeWrapped(`Notes:${r.notes}`, 22, 168);
+      }
+
+      if (getReportDetailsMode() === 'full') {
       if (getReportDetailsMode() === 'full') {
       if (el.reportDetails.value === 'full') {
         writeWrapped(`Owner:${r.owner} Client Contact:${r.contact} Category:${r.category} Project:${r.project}`, 22, 168);
@@ -1473,6 +1479,9 @@ async function generatePdfReport(){
         }
         if (r.source === 'SM') {
           writeWrapped(`Post Link:${r.link || '-'} Media Type:${r.category || '-'}`, 22, 168);
+        }
+        if (r.source !== 'EV') {
+          writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
         }
         writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
       }

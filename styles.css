@@ -765,6 +765,21 @@ textarea {
   font-size: 0.8rem;
 }
 
+
+.report-details-group .report-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-content: start;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.report-details-group .report-check input {
+  margin: 0;
+  width: auto;
+}
+
 .report-mode-row {
   display: flex;
   gap: 1rem;
