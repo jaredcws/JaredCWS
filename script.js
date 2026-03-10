@@ -7,6 +7,7 @@ const state = {
   selectedId: null, selectedGroupIds: [], detailEditMode: false, activeView: "business-development", clientsExpanded: false, renderRows: [],
   g2Loaded: false, activeBdTab: "calendar", eventColumns: [], eventHeaderRow: null, eventsBucket: "upcoming",
   goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", reportNotesImages: [], reportWinCaptureImages: [], reportRollingChaseImages: [], reportHighlightsImages: [], reportEffortsImages: [], selectedProposalId: null
+  goalCheckRows: [], goalCheckLoaded: false, g2SheetTable: [], socialRows: [], socialLoaded: false, proposalRows: [], proposalLoaded: false, showBdCalendar: true, showSocialCalendar: true, defaultLogoDataUrl: "", reportLogoDataUrl: "", reportNotesImages: [], reportEffortsImages: [], selectedProposalId: null
 };
 
 const seedBdRows = [
@@ -30,6 +31,7 @@ const el = {
   sheetCalendar: document.getElementById("sheet-calendar"), sheetG2: document.getElementById("sheet-g2"), toggleClients: document.getElementById("toggle-clients"), clientSheetList: document.getElementById("client-sheet-list"),
   sheetTitle: document.getElementById("sheet-title"), sheetTable: document.getElementById("sheet-table"),
   reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetailsSummary: document.getElementById("report-details-summary"), reportDetailsFull: document.getElementById("report-details-full"), reportEfforts: document.getElementById("report-efforts"), reportEffortsImages: document.getElementById("report-efforts-images"), reportEffortsImagesStatus: document.getElementById("report-efforts-images-status"), reportWinCapture: document.getElementById("report-win-capture"), reportWinCaptureImages: document.getElementById("report-win-capture-images"), reportWinCaptureImagesStatus: document.getElementById("report-win-capture-images-status"), reportRollingChase: document.getElementById("report-rolling-chase"), reportRollingChaseImages: document.getElementById("report-rolling-chase-images"), reportRollingChaseImagesStatus: document.getElementById("report-rolling-chase-images-status"), reportHighlights: document.getElementById("report-highlights"), reportHighlightsImages: document.getElementById("report-highlights-images"), reportHighlightsImagesStatus: document.getElementById("report-highlights-images-status"), reportNotes: document.getElementById("report-notes"), reportNotesImages: document.getElementById("report-notes-images"), reportNotesImagesStatus: document.getElementById("report-notes-images-status"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalContentList: document.getElementById("proposal-content-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
+  reportDataset: document.getElementById("report-dataset"), reportDsBd: document.getElementById("report-ds-bd"), reportDsEvents: document.getElementById("report-ds-events"), reportDsSocial: document.getElementById("report-ds-social"), reportDsProposals: document.getElementById("report-ds-proposals"), reportFrom: document.getElementById("report-from"), reportTo: document.getElementById("report-to"), reportCenter: document.getElementById("report-center"), reportRolling: document.getElementById("report-rolling"), reportCustom: document.getElementById("report-custom"), reportIncludeGoals: document.getElementById("report-include-goals"), reportCenterRow: document.getElementById("report-center-row"), reportCustomRow: document.getElementById("report-custom-row"), reportDetails: document.getElementById("report-details"), reportNotes: document.getElementById("report-notes"), reportNotesImages: document.getElementById("report-notes-images"), reportNotesImagesStatus: document.getElementById("report-notes-images-status"), reportEfforts: document.getElementById("report-efforts"), reportEffortsImages: document.getElementById("report-efforts-images"), reportEffortsImagesStatus: document.getElementById("report-efforts-images-status"), reportLogoInput: document.getElementById("report-logo-input"), generateReport: document.getElementById("generate-report"), reportStatus: document.getElementById("report-status"), proposalTeamList: document.getElementById("proposal-team-list"), proposalContentList: document.getElementById("proposal-content-list"), proposalCompleteList: document.getElementById("proposal-complete-list"), proposalCountTeam: document.getElementById("proposal-count-team"), proposalCountContent: document.getElementById("proposal-count-content"), proposalCountComplete: document.getElementById("proposal-count-complete"), proposalDetailPanel: document.getElementById("proposal-detail-panel"), proposalDetailContent: document.getElementById("proposal-detail-content"), proposalLayout: document.getElementById("proposal-layout"), proposalCompleteSearch: document.getElementById("proposal-complete-search"), proposalCloseDetails: document.getElementById("proposal-close-details"), proposalSelectedId: document.getElementById("proposal-selected-id")
 };
 
 const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1288,6 +1290,21 @@ async function generatePdfReport(){
       link: postLink || '-'
     };
   };
+  const mapSocial = (r)=>({
+    source: 'SM',
+    rawDate: r.Date,
+    parsedDate: parseDate(r.Date),
+    task: r.Subject || r.Task || '-',
+    client: 'Social Media',
+    status: r.Status || '-',
+    owner: r.Owner || '-',
+    category: r['Media Type'] || r.Category || '-',
+    project: r['Project Name'] || '-',
+    notes: r.Caption || r['Account / Notes'] || '-',
+    contact: '-',
+    location: r['Post Link'] || '-',
+    link: r['Post Link'] || '-'
+  });
 
   const eventDateCol = findEventColumn('date') || 'Dates Confirmed';
   const eventCol = findEventColumn('event') || 'Event';
@@ -1353,6 +1370,7 @@ async function generatePdfReport(){
   let endDate;
   let upcomingRows = [];
   let pastRows = [];
+  let customRows = [];
 
   const inRange = (d, start, end) => {
     const copy = new Date(d);
@@ -1399,6 +1417,7 @@ async function generatePdfReport(){
     const customWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
     upcomingRows = applyEventSectionRules(customWindowRows.filter((r)=>inRange(r.parsedDate, generatedDate, endDate)));
     pastRows = applyEventSectionRules(customWindowRows.filter((r)=>inRange(r.parsedDate, startDate, beforeGeneratedDate)));
+    customRows = applyEventSectionRules(validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate)));
   }
 
   const jsPDFCtor = window.jspdf?.jsPDF;
@@ -1418,6 +1437,7 @@ async function generatePdfReport(){
 
   const writeWrapped = (text, x, maxWidth)=>{
     doc.setFont('helvetica', 'normal');
+  const writeWrapped = (text, x, maxWidth)=>{
     const lines = doc.splitTextToSize(String(text), maxWidth);
     lines.forEach((ln)=>{
       ensurePage(6);
@@ -1451,6 +1471,8 @@ async function generatePdfReport(){
       }
 
       if (getReportDetailsMode() === 'full') {
+      if (getReportDetailsMode() === 'full') {
+      if (el.reportDetails.value === 'full') {
         writeWrapped(`Owner:${r.owner} Client Contact:${r.contact} Category:${r.category} Project:${r.project}`, 22, 168);
         if (r.source === 'PR') {
           writeWrapped(`Content Deadline:${formatDateMMDDYY(r.contentDeadline)} Proposal Deadline:${formatDateMMDDYY(r.proposalDeadline)} Result:${r.result || '-'}`, 22, 168);
@@ -1461,6 +1483,7 @@ async function generatePdfReport(){
         if (r.source !== 'EV') {
           writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
         }
+        writeWrapped(`Meeting Notes:${r.notes}`, 22, 168);
       }
     });
     y += 2;
@@ -1504,6 +1527,7 @@ async function generatePdfReport(){
       setGoalPercentColor(r.percent);
       writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
       doc.setTextColor(30, 30, 30);
+      writeWrapped(`${i + 1}. ${r.goal || '-'} | ${formatGoalPercent(r.percent)}`, 18, 172);
     });
     y += 2;
   };
@@ -1546,6 +1570,7 @@ async function generatePdfReport(){
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Goal Predictions, based on progress to date', chartX, cy);
+    doc.text('G2 Sheet (Percentages)', chartX, cy);
     cy += 5;
 
     if (!state.goalCheckRows.length) {
@@ -1557,6 +1582,7 @@ async function generatePdfReport(){
     }
 
     const rows = state.goalCheckRows;
+    const rows = state.goalCheckRows.slice(0, 13);
     rows.forEach((r)=>{
       const label = (r.goal || '').slice(0, 14) || '-';
       const pctText = formatGoalPercent(r.percent);
@@ -1571,6 +1597,7 @@ async function generatePdfReport(){
       const barX = chartX + 48;
       const barY = cy;
       const barW = 28;
+      const barW = 24;
       const barH = 3.2;
       doc.setDrawColor(190, 190, 190);
       doc.setLineWidth(0.1);
@@ -1585,10 +1612,24 @@ async function generatePdfReport(){
         else doc.setFillColor(196, 53, 53);
         if (pctNum > 0) doc.rect(midX, barY, fillW, barH, 'F');
         else doc.rect(midX - fillW, barY, fillW, barH, 'F');
+
+      if (pctNum !== null && pctNum !== 0) {
+        const fillW = Math.min(Math.abs(pctNum), 100) / 100 * barW;
+        if (pctNum > 0) doc.setFillColor(37, 128, 70);
+        else doc.setFillColor(196, 53, 53);
+        doc.rect(barX, barY, fillW, barH, 'F');
       }
 
       doc.setTextColor(30, 30, 30);
       cy += 5;
+      const label = (r.goal || '').slice(0, 18) || '-';
+      const pctText = formatGoalPercent(r.percent);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      const line = `${label}: ${pctText}`;
+      const lines = doc.splitTextToSize(line, chartWidth);
+      lines.forEach((ln)=>{ doc.text(ln, chartX, cy + 2.4); cy += 3.8; });
+      cy += 1.2;
     });
     return cy;
   })();
@@ -1655,6 +1696,8 @@ async function generatePdfReport(){
   if (state.g2SheetTable.length) {
     y = Math.max(y + 4, chartBottomY + 18);
     ensurePage(22);
+    ensurePage(22);
+    y += 4;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('G2 Sheet Table (A1:P7)', 18, y);
@@ -1743,6 +1786,14 @@ async function generatePdfReport(){
     if (!images.length) return;
 
     let lastHeadingPage = 0;
+    if (title) {
+      ensurePage(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(title, 18, y);
+      y += 5;
+    }
+
     for (let i = 0; i < images.length; i += 1) {
       const image = images[i];
       try {
@@ -1772,6 +1823,7 @@ async function generatePdfReport(){
           }
         }
 
+        ensurePage(h + 10);
         doc.addImage(image.dataUrl, getImageFormat(image.dataUrl), 18, y, w, h);
         y += h + 4;
         doc.setTextColor(30, 30, 30);
@@ -1795,6 +1847,10 @@ async function generatePdfReport(){
   await renderNotesImageBlock('Win & Capture Rates Images', state.reportWinCaptureImages, 'win & capture image');
   renderNotesTextBlock('Rolling Chase Won', el.reportRollingChase?.value || '');
   await renderNotesImageBlock('Rolling Chase Won Images', state.reportRollingChaseImages, 'rolling chase won image');
+  renderNotesTextBlock('Report Notes', el.reportNotes?.value || '');
+  await renderNotesImageBlock('Report Note Images', state.reportNotesImages, 'note image');
+  renderNotesTextBlock('Efforts', el.reportEfforts?.value || '');
+  await renderNotesImageBlock('', state.reportEffortsImages, 'efforts image');
 
   if (useRolling) {
     const upcomingRangeText = `${formatDateMMDDYY(centerDate)} to ${formatDateMMDDYY(endDate)}`;
@@ -1836,6 +1892,11 @@ async function generatePdfReport(){
       'Past Events',
       pastRangeText,
       pastRows
+    const customRangeText = `${formatDateMMDDYY(startDate)} to ${formatDateMMDDYY(endDate)}`;
+    renderSection(
+      'Custom Range Events',
+      customRangeText,
+      customRows
     );
 
     const customWindowRows = validRows.filter((r)=>inRange(r.parsedDate, startDate, endDate));
@@ -1853,6 +1914,10 @@ async function generatePdfReport(){
   el.reportStatus.textContent = useRolling
     ? `Generated PDF: Upcoming (${upcomingRows.length}) | Past (${pastRows.length}).`
     : `Generated PDF: Custom Range Upcoming (${upcomingRows.length}) | Past (${pastRows.length}).`;
+  doc.save(`efforts-report-${new Date().toISOString().slice(0,10)}.pdf`);
+  el.reportStatus.textContent = useRolling
+    ? `Generated PDF: Upcoming (${upcomingRows.length}) | Past (${pastRows.length}).`
+    : `Generated PDF: Custom Range (${customRows.length}).`;
 }
 
 
